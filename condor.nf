@@ -43,7 +43,8 @@ process find_model {
 
 
 process build_matrices {
-    conda '/pasteur/sonic/homes/mamorel/miniconda3/envs/jupyter-notebook'
+    label 'python'
+
     input:
     file iqtree_modelrate from MatrixChannel
     output:
@@ -59,6 +60,8 @@ process build_matrices {
 
 
 process info_align {
+    label 'goalign'
+
     input:
     file align
     output:
@@ -71,6 +74,8 @@ process info_align {
 }
 
 process info_align_nbseq {
+    label 'goalign'
+
     input:
     file align
     output:
@@ -87,6 +92,8 @@ Stats_align = Length.merge(Nb_seq)
 
 //reoptimize tree branch lengths and estimate rates and frequencies by ML 
 process reoptimize_tree {
+    label 'iqtree'
+
     input:
     file align
     file tree
@@ -115,6 +122,8 @@ process reoptimize_tree {
 }
 
 process tree_rename{
+    label 'gotree'
+
     publishDir "${resdir}", mode: 'copy'
     input:
     file tree from TreeChannel
@@ -123,6 +132,7 @@ process tree_rename{
     file "named_tree" into SimulatorChannel, NamedtreeChannel
     file "rooted_*" into RootedtreeChannel
     //Remove the branch length for root
+
     shell:
     ''' 
     sed -i  '/);/!s/)[0-9]*.[0-9]*;/);/' !{tree}
@@ -132,7 +142,8 @@ process tree_rename{
 }
 
 process pars_align_file{
-    conda '/pasteur/sonic/homes/mamorel/miniconda3/envs/jupyter-notebook'
+    label 'python'
+ 
     input : 
     tuple val(length), file(align), file(rates), file(freq) from RatesparamsChannel
     val min_seq
@@ -148,7 +159,8 @@ process pars_align_file{
 }
 
 process acr_pastml{
-    conda '/pasteur/sonic/homes/mamorel/miniconda3/envs/pastmlmatrix'
+    label 'pastml'
+
     publishDir "${resdir}", pattern: "work_pastml/named*.nw",  mode: 'copy'
     input:
     tuple val(length), file(rate), file(freq), file(input) from Pastml_align
@@ -185,7 +197,8 @@ process acr_pastml{
 
 
 process pre_count{
-    conda '/pasteur/sonic/homes/mamorel/miniconda3/envs/jupyter-notebook'
+    label 'python'
+
     publishDir "${resdir}", mode: 'copy'
     input : 
     tuple val(length), file(positions), file(rate), file(tree), file(pastml_acr), file(marginal_root) from pastml_ML_out
@@ -209,7 +222,8 @@ process pre_count{
 process simulator {
     //errorStrategy 'retry'
     //maxRetries 3
-    conda '/pasteur/sonic/homes/mamorel/miniconda3/envs/jupyter-notebook'
+    label 'python'
+
     publishDir "${resdir}", pattern: "count*.tsv.gz", mode: 'copy'
     input : 
     each x from ListPositionsChannel.readLines()
@@ -241,7 +255,8 @@ Collect_simulations = MysimulationsChannel.collect()
 //56 different alignments 
 
 process count_apparitions{
-    conda '/pasteur/sonic/homes/mamorel/miniconda3/envs/jupyter-notebook'
+    label 'python'
+
     input : 
     tuple file(positions), file(rate), file(tree), file (align) from python_count
     output : 
@@ -257,8 +272,10 @@ Subscribe_matrices.subscribe{positions, rate, align, freqs, substitutions ->  fr
  
 // should 
 process conclude_convergence{
+    label 'python'
+
     publishDir "${resdir}", mode: 'copy'
-    conda '/pasteur/sonic/homes/mamorel/miniconda3/envs/jupyter-notebook'
+    
     input: 
     file simulation_model from SimulatorMatrix
     file align 
