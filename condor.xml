@@ -1,5 +1,5 @@
 <tool id="condor" name="condor" version="0.1">
-  <description>Condor: </description>
+  <description>Condor: A workflow to detect convergent evolution</description>
   <requirements>
     <requirement type="package" version="1.8.0">java</requirement>
     <requirement type="package">singularity</requirement>
@@ -10,7 +10,7 @@
   <command>
     <![CDATA[
     bash $__tool_directory__/nextflow run 
-      -c $__tool_directory__/nextflow.config -profile pasteuralaxy
+      -c $__tool_directory__/nextflow.config -profile pasteurgalaxy
       $__tool_directory__/condor.nf
       --model ${model}
       --align ${seq}

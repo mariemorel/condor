@@ -209,7 +209,8 @@ process pre_count{
     publishDir "${resdir}", mode: 'copy'
     input : 
     tuple val(length), file(positions), file(rate), file(tree), file(pastml_acr), file(marginal_root) from pastml_ML_out
-  
+    val nb_simu
+
     output : 
     tuple file(positions), file(rate), file(tree), file("*pastml_acr.fasta") into python_count
     file "reconstructed_root" into Root_seq
@@ -217,7 +218,7 @@ process pre_count{
 
     shell:
     '''
-    pastml_fasta.py !{pastml_acr} !{positions} !{length} !{marginal_root} test_
+    pastml_fasta.py !{pastml_acr} !{positions} !{length} !{marginal_root} !{nb_simu} test_
     '''
     //gunzip -c '1.out.gz' > pastml_output
     //for i in {2..!{length}};  do gunzip -c ${i}.out.gz | cut -f 2 > temp && paste pastml_output temp > test2 && mv test2 pastml_output ;  done
@@ -234,9 +235,7 @@ process simulator {
     publishDir "${resdir}", pattern: "count*.tsv.gz", mode: 'copy'
     input : 
     each x from ListPositionsChannel.readLines()
-    val nb_simu
     file simulation_model from SimulatorMatrix
-    //val simufreq
     file (rates) from RatesChannel
     file (freq) from FreqChannel
     file (named_tree) from SimulatorChannel
@@ -251,7 +250,7 @@ process simulator {
     rate=`sed -n "!{x}p" !{rates}` # sed numerotation from 1
     
     output="!{x}_!{named_tree}_"
-    simulator_counting_rates_from_root.py root.txt !{named_tree} !{nb_simu} ${output} ${rate} !{freq} !{simulation_model} 
+    simulator_counting_rates_from_root.py root.txt !{named_tree} ${output} ${rate} !{freq} !{simulation_model} 
     '''
 }
 

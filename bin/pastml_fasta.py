@@ -14,16 +14,15 @@ parser.add_argument("pastml_acr", help="pastml output")
 parser.add_argument("positions", help = "file with positions to test" )
 parser.add_argument("length", help = "nb sites" )
 parser.add_argument("marginal", help = "marinal probabilities of root")
+parser.add_argument("nb_simu", help = "number of simulations to perform")
 parser.add_argument("output", help="name of the output")
 args = parser.parse_args()
-
 
 pastml_acr = str(args.pastml_acr)
 path_pos = str(args.positions)
 nb_sites = int(args.length)
 output = str(args.output)
-
-
+nb_simu = int(args.nb_simu)
 
 Pos_list = []
 with open(path_pos) as f:
@@ -48,7 +47,7 @@ for a,pos in enumerate(characters):
 
     probs = []
     for proba in marginal_list[a]:
-        probs.append(10000*float(proba))
+        probs.append(nb_simu*float(proba))
     for i, count in enumerate(saferound(probs,0)):
         root.extend( int(count) * [AA[i]])
 

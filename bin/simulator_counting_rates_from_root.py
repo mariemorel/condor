@@ -24,8 +24,6 @@ parser.add_argument(
 )  # one position
 parser.add_argument(
     "tree_file", help="rooted tree with names at the internal nodes")
-parser.add_argument(
-    "nb_simu", help="number of simulations to perform")  # 10000
 parser.add_argument("output", help="output file name")
 parser.add_argument(
     "rates", help="value of the rate for the position")  # one rate
@@ -35,7 +33,6 @@ parser.add_argument("matrix_model", help="matrix of the model")
 args = parser.parse_args()
 
 tree = PhyloTree(args.tree_file, format=1)
-nb_repeat = int(args.nb_simu)
 amino_acid = list("ARNDCQEGHILKMFPSTWYV")
 
 rate = float(args.rates)  # should be one rate only

@@ -1,5 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
+#  Copyright 2020, Seqera Labs
 #  Copyright 2013-2019, Centre for Genomic Regulation (CRG)
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +16,7 @@
 #  limitations under the License.
 
 [[ "$NXF_DEBUG" == 'x' ]] && set -x
-NXF_VER=${NXF_VER:-'19.07.0'}
+NXF_VER=${NXF_VER:-'20.10.0'}
 NXF_ORG=${NXF_ORG:-'nextflow-io'}
 NXF_HOME=${NXF_HOME:-$HOME/.nextflow}
 NXF_PROT=${NXF_PROT:-'https'}
@@ -230,11 +231,11 @@ while [[ $# != 0 ]]; do
       ;;
     -process.executor|-executor.name)
       if [[ $2 && $2 == 'ignite' ]]; then
-      NXF_MODE='ignite'; shift;
+      [ ! $NXF_MODE ] && NXF_MODE='ignite'; shift;
       fi
       ;;
     -with-mpi)
-      NXF_MODE='ignite'
+      [ ! $NXF_MODE ] && NXF_MODE='ignite'
       NXF_MPIRUN='true'
       ;;
     *)
@@ -250,6 +251,7 @@ if [[ "$dockerize" ]]; then
   NXF_ASSETS=${NXF_ASSETS:-${NXF_HOME:-$HOME/.nextflow}/assets}
   mkdir -p "$NXF_ASSETS"
   exec docker run $detach --rm --net host \
+   -e NXF_ANSI_LOG=false \
    -e USER -e HOME -e NXF_ASSETS=$NXF_ASSETS -e NXF_USRMAP=$(id -u) -e NXF_DOCKER_OPTS='-u $(id -u)' \
    -v /var/run/docker.sock:/var/run/docker.sock \
    -v $HOME:$HOME:ro,Z -v $NXF_ASSETS:$NXF_ASSETS:Z -v $PWD:$PWD:Z -w $PWD $NXF_DOCKER_OPTS \
@@ -334,7 +336,7 @@ else
     version_check="^(1.7|1.8)"
     version_message="Java 7 or 8"
   else
-    version_check="^(1.8|9|10|11|12|13|14)"
+    version_check="^(1.8|9|10|11|12|13|14|15)"
     version_message="Java 8 or later"
   fi
   if [[ ! $JAVA_VER =~ $version_check ]]; then
@@ -346,8 +348,10 @@ else
       fi
       exit 1
   fi
-  if [[ ! $JAVA_VER =~ ^(1.8|9|10|11) ]]; then
-      echo_yellow "NOTE: Nextflow is not tested with Java $JAVA_VER -- It's recommended the use of version 8 up to 11\n"
+  if [[ ! $JAVA_VER =~ ^(1.8|9|10|11|12|13|14|15) ]]; then
+      echo_yellow "NOTE: Nextflow is not tested with Java $JAVA_VER -- It's recommended the use of version 8 up to 15\n"
+  elif [[ ! $JAVA_VER =~ ^(1.8|9|10|11) && $NXF_MODE == ignite ]]; then
+      echo_yellow "WARN: Apache Ignite executor is not tested with Java $JAVA_VER -- It's recommended the use of version 8 up to 11\n"
   fi
   mkdir -p $(dirname "$JAVA_KEY")
   [[ -f $JAVA_VER ]] && echo $JAVA_VER > "$JAVA_KEY"
@@ -367,7 +371,7 @@ fi
 
 COLUMNS=${COLUMNS:-`tty -s && tput cols 2>/dev/null || true`}
 declare -a JAVA_OPTS=()
-JAVA_OPTS+=(-Dfile.encoding=UTF-8 -noverify -Dcapsule.trampoline -Dcapsule.java.cmd="$JAVA_CMD")
+JAVA_OPTS+=(-Dfile.encoding=UTF-8 -Dcapsule.trampoline -Dcapsule.java.cmd="$JAVA_CMD")
 if [[ $cmd == console ]]; then bg=1;
 else JAVA_OPTS+=(-Djava.awt.headless=true)
 fi
@@ -430,7 +434,7 @@ else
     cli=($("$JAVA_CMD" "${JAVA_OPTS[@]}" -jar "$NXF_BIN"))
     [[ $? -ne 0 ]] && echo_red 'Unable to initialize nextflow environment' && exit 1
 
-    if [[ "$JAVA_VER" =~ ^(9|10|11) ]]; then
+    if [[ "$JAVA_VER" =~ ^(9|10|11|12|13|14|15) ]]; then
       launcher=("${cli[@]:0:1}")
       launcher+=(--add-opens=java.base/java.lang=ALL-UNNAMED)
       launcher+=(--add-opens=java.base/java.io=ALL-UNNAMED)
