@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import pandas as pd 
 import numpy as np
@@ -10,10 +10,13 @@ model_list = ["BLOSUM62","CPREV","DAYHOFF","FLU","HIVB","HIVW","JTT","DCMUT","JT
 
 parser = argparse.ArgumentParser(description="find the model matrix and adapt to pastml format")
 parser.add_argument("model", help="best model found by iqtree MFP, default = LG")
+parser.add_argument("matrices", help="File containing all the matrices")
 
 args = parser.parse_args()
 
 model_name=str(args.model)
+matrices=str(args.matrices)
+
 
 AA_1_LETTER_CODES = ['A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G',
                      'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S',
@@ -23,7 +26,7 @@ NUM_AA = 20
 
 model_dict={}
 list_rates = []
-for line in open("/pasteur/zeus/projets/p01/Evolbioinfo/users/mamorel/Projet_Convergence/Code/detecting-convergent-evolution/protein_model.txt"):
+for line in open(matrices):
     if line.startswith("model"):
         if len(list_rates) > 0:
             model_dict[model] = list_rates

@@ -5,39 +5,45 @@ params.align = path_file + "args/processed/naturepaper/B.pol.aa.woutgroup.noreco
 params.tree = path_file + "trees/processed/naturepaper/root.B.pol.aa.woutgroup.norecomb.monophyletic.MLfreq.treefile"
 params.outgroup = path_file+"args/processed/naturepaper/outgroup.losalamos.names"
 params.resdir=path_file+"results/naturepaper/test_HIV/" //do not forget to change the resdir
+params.model = "best" // best: will choose the best model, other wise will take the given model
+params.matrices = "$baseDir/assets/protein_model.txt"
+
 
 params.nb_simu = 10000
 params.min_seq = 12
-params.model_test = "None" //remove this for after
-
 
 align = file(params.align)
 tree = file(params.tree)
 outgroup = file(params.outgroup)
+matrices = file(params.matrices)
 resdir=file(params.resdir)
 resdir.with {mkdirs()}
 
 nb_simu = params.nb_simu
 min_seq = params.min_seq
-model_test = params.model_test
+model = params.model
 
 //nb seqs and length align
 //run iqtree model finder
 process find_model {
+    label 'iqtree'
+
     input:
     file tree
     file align
+    val model
+
     output:
     file "best_fit_model.txt" into ModelChannel, MatrixChannel
     shell:
-    if ( model_test == 'JTT+R3' )
-    '''
-    printf "JTT+R3" > best_fit_model.txt
-    '''
-    else
+    if ( model == 'best' )
     '''
     iqtree -m MFP -nt AUTO -s !{align} -te !{tree}
     grep "Best-fit model" !{align}.iqtree | cut -d " " -f 6 > best_fit_model.txt
+    '''
+    else
+    '''
+    printf "!{model}" > best_fit_model.txt
     '''
 }
 
@@ -47,6 +53,8 @@ process build_matrices {
 
     input:
     file iqtree_modelrate from MatrixChannel
+    file matrices
+
     output:
     file "*pastml_matrix" into PastmlMatrix
     file "*simulator_matrix.model" into SimulatorMatrix
@@ -54,7 +62,7 @@ process build_matrices {
     shell:
     '''
     matrix_name=`awk 'BEGIN{FS="+"} {print toupper($1) }' !{iqtree_modelrate}`
-    matrix_pastml_format.py ${matrix_name}
+    matrix_pastml_format.py ${matrix_name} !{matrices}
     '''
 }
 
@@ -297,4 +305,3 @@ process conclude_convergence{
     convergent_substitutions_pvalue.py !{positions} ${R} !{rate} !{align} !{ref_matrix} !{substitutions} !{nb_simu} !{freq} !{simulation_model} !{min_seq}
     '''
 }
-
