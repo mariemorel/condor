@@ -277,3 +277,6 @@ all_tests["detected"] = ["PASS" if i <=
                          alpha else "NOT PASS" for i in all_tests.pvalue]
 
 all_tests.to_csv("all_results_metrics.tsv", sep="\t", index=False)
+
+detected = all_tests[all_tests["detected"] == "PASS"]
+detected.to_csv("detected_metrics.tsv", sep="\t", index=False)
