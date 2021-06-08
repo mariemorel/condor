@@ -8,7 +8,6 @@ params.resdir=path_file+"results/naturepaper/test_HIV/" //do not forget to chang
 params.model = "best" // best: will choose the best model, other wise will take the given model
 params.matrices = "$baseDir/assets/protein_model.txt"
 
-
 params.nb_simu = 10000
 params.min_seq = 12
 
@@ -38,7 +37,7 @@ process find_model {
     shell:
     if ( model == 'best' )
     '''
-    iqtree -m MFP -nt AUTO -s !{align} -te !{tree}
+    iqtree -m MFP -nt AUTO -s !{align} -te !{tree} -T !{task.cpus}
     grep "Best-fit model" !{align}.iqtree | cut -d " " -f 6 > best_fit_model.txt
     '''
     else
@@ -195,7 +194,7 @@ process acr_pastml{
     VAR=`while read -r line; do echo parameter_$((${line}-1)); done < !{positions}`
     ID=`while read -r line; do echo $((${line}-1)); done < !{positions}`
     MATRIX=`while read -r line; do echo !{matrix}; done < !{positions}`
-    pastml -t !{tree} -d ${align%.*.*}.input --prediction_method MAP -m CUSTOM_RATES --rate_matrix $MATRIX -c $ID -o ${align%.*.*}.pastml.ML.out --work_dir work_pastml --parameter $VAR
+    pastml --threads !{task.cpus} -t !{tree} -d ${align%.*.*}.input --prediction_method MAP -m CUSTOM_RATES --rate_matrix $MATRIX -c $ID -o ${align%.*.*}.pastml.ML.out --work_dir work_pastml --parameter $VAR
     gzip ${align%.*.*}.pastml.ML.out
     rm work_pastml/params*.tab
     rm parameter_*

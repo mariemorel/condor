@@ -1,0 +1,70 @@
+<tool id="condor" name="condor" version="0.1">
+  <description>Condor: </description>
+  <requirements>
+    <requirement type="package" version="1.8.0">java</requirement>
+    <requirement type="package">singularity</requirement>
+  </requirements>
+  <stdio>
+    <exit_code range="1:" level="fatal"/>
+  </stdio>
+  <command>
+    <![CDATA[
+    bash $__tool_directory__/nextflow run 
+      -c $__tool_directory__/nextflow.config -profile pasteuralaxy
+      $__tool_directory__/condor.nf
+      --model ${model}
+      --align ${seq}
+      --tree ${tree} 
+      --outgroup ${outgroup}
+      --resdir results 
+      --nb_simu 10000;
+    ]]>
+  </command>
+  <inputs>
+    <param name="seq" format="fasta" type="data" label="Alignment file" help="Fasta format"/>
+    <param name="tree" format="nhx" type="data" label="Tree file" help="Newick format"/>
+    <param name="outgroup" format="txt" type="data" label="Outgroup file" help="Txt format, one taxon per line"/>
+    <param name="model" type="select" label="Evolutionary model to use">
+      <option value="best" selected="true">Best (IQ-TREE Model finder)</option>
+      <option value="POISSON" selected="false">POISSON</option>
+      <option value="DAYHOFF" selected="false">DAYHOFF</option>
+      <option value="DCMUT" selected="false">DCMUT</option>
+      <option value="JTT" selected="false">JTT</option>
+      <option value="MTREV" selected="false">MTREV</option>
+      <option value="WAG" selected="false">WAG</option>
+      <option value="RTREV" selected="false">RTREV</option>
+      <option value="CPREV" selected="false">CPREV</option>
+      <option value="VT" selected="false">VT</option>
+      <option value="BLOSUM62" selected="false">BLOSUM62</option>
+      <option value="MTMAM" selected="false">MTMAM</option>
+      <option value="LG" selected="false">LG</option>
+      <option value="MTART" selected="false">MTART</option>
+      <option value="MTZOA" selected="false">MTZOA</option>
+      <option value="PMB" selected="false">PMB</option>
+      <option value="HIVB" selected="false">HIVB</option>
+      <option value="HIVW" selected="false">HIVW</option>
+      <option value="JTTDCMUT" selected="false">JTTDCMUT</option>
+      <option value="FLU" selected="false">FLU</option>
+      <option value="MTMET" selected="false">MTMET</option>
+      <option value="MTVER" selected="false">MTVER</option>
+      <option value="MTINV" selected="false">MTINV</option>
+      <option value="Q_PFAM" selected="false">Q_PFAM</option>
+      <option value="Q_PFAM_GB" selected="false">Q_PFAM_GB</option>
+      <option value="Q_LG" selected="false">Q_LG</option>
+      <option value="Q_BIRD" selected="false">Q_BIRD</option>
+      <option value="Q_INSECT" selected="false">Q_INSECT</option>
+      <option value="Q_MAMMAL" selected="false">Q_MAMMAL</option>
+      <option value="Q_PLANT" selected="false">Q_PLANT</option>
+      <option value="Q_YEAST" selected="false">Q_YEAST</option>
+      <option value="FLAVI" selected="false">FLAVI</option>
+    </param>
+  </inputs>
+  <outputs>
+    <data name="all_metrics" format="txt" label="All results metrics" from_work_dir="results/all_results_metrics.tsv" />
+    <data name="detected_metrics" format="txt" label="Detected metrics" from_work_dir="results/detected_metrics.tsv" />
+  </outputs>
+  <help>
+  </help>
+  <citations>
+  </citations>
+</tool>
