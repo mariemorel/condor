@@ -4,6 +4,7 @@ import pandas as pd
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio import SeqIO
+from iteround import saferound
 import numpy as np
 
 import argparse
@@ -44,8 +45,13 @@ AA = list("ARNDCQEGHILKMFPSTWYV")
 root_dict = {}
 for a,pos in enumerate(characters): 
     root= []
-    for i,proba in enumerate(marginal_list[a]):
-        root.extend(int(np.round(10000 * float(proba))) * [AA[i]])
+
+    probs = []
+    for proba in marginal_list[a]:
+        probs.append(10000*float(proba))
+    for i, count in enumerate(saferound(probs,0)):
+        root.extend( int(count) * [AA[i]])
+
     root_dict[pos] = root
 
 
