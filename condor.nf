@@ -272,7 +272,7 @@ process conclude_convergence{
     //named*.phy
      
     output:
-    file("all_results_metrics.tsv") 
+    tuple file("detected_metrics.tsv"), file("all_results_metrics.tsv") 
 
     shell:
     '''
