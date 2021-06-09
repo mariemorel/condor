@@ -116,9 +116,8 @@ process reoptimize_tree {
 //fixed tree no tree search performed
 //should work with no F or I 
     '''
-    sed -i '/+F/!s/+/+F+/' !{iqtree_mode}
-    sed -i 's/+F/+FO/' !{iqtree_mode}
-    iqtreemode=`cat !{iqtree_mode}`
+    sed '/+F/!s/$/+FO/' !{iqtree_mode} | sed 's/+F[^+$]*/+FO/' > corrected_model
+    iqtreemode=`cat corrected_model`
     iqtree -m ${iqtreemode} -nt AUTO -s !{align} -te !{tree} -wsr -pre align
     
     tail -n+10 align.rate | cut -f 2 > reestimated_rate
