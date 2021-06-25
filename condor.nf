@@ -37,7 +37,7 @@ process find_model {
     shell:
     if ( model == 'best' )
     '''
-    iqtree -m MFP -nt AUTO -s !{align} -te !{tree} -T !{task.cpus}
+    iqtree -m MFP -s !{align} -te !{tree} -nt !{task.cpus}
     grep "Best-fit model" !{align}.iqtree | cut -d " " -f 6 > best_fit_model.txt
     '''
     else
@@ -118,7 +118,7 @@ process reoptimize_tree {
     '''
     sed '/+F/!s/$/+FO/' !{iqtree_mode} | sed 's/+F[^+$]*/+FO/' > corrected_model
     iqtreemode=`cat corrected_model`
-    iqtree -m ${iqtreemode} -nt AUTO -s !{align} -te !{tree} -wsr -pre align
+    iqtree -m ${iqtreemode} -nt !{task.cpus} -s !{align} -te !{tree} -wsr -pre align
     
     tail -n+10 align.rate | cut -f 2 > reestimated_rate
     len=`wc -l reestimated_rate | cut -d " " -f 1`

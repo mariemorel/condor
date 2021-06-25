@@ -12,11 +12,16 @@
     bash $__tool_directory__/nextflow run 
       -c $__tool_directory__/nextflow.config -profile pasteurgalaxy
       $__tool_directory__/condor.nf
+      #if $model == "best":
       --model ${model}
+      #else:
+      --model ${model}${invariant}${gamma}
+      #end if
       --align ${seq}
       --tree ${tree} 
       --outgroup ${outgroup}
-      --resdir results 
+      --resdir results
+      --min_seq ${minconvseqs}
       --nb_simu 10000;
     ]]>
   </command>
@@ -57,6 +62,31 @@
       <option value="Q_PLANT" selected="false">Q_PLANT</option>
       <option value="Q_YEAST" selected="false">Q_YEAST</option>
       <option value="FLAVI" selected="false">FLAVI</option>
+    </param>
+    <param name="invariant" type="select" label="Invariant sites">
+      <option value="" selected="true">empty</option>
+      <option value="+I" selected="false">+I</option>
+    </param>
+    <param name="rates" type="select" label="Rate heterogeneity">
+      <option value="" selected="true">No rate heteorogeneity</option>
+      <option value="+G4" selected="false">+G4</option>
+      <option value="+G6" selected="false">+G6</option>
+      <option value="+G8" selected="false">+G8</option>
+      <option value="+R4" selected="false">+R4</option>
+      <option value="+R6" selected="false">+R6</option>
+      <option value="+R8" selected="false">+R8</option>
+    </param>
+    <param name="minconvseqs" type="select" label="Minimum number of convergent sequences">
+      <option value="2">2</option>
+      <option value="4">4</option>
+      <option value="6">6</option>
+      <option value="8">8</option>
+      <option value="10">10</option>
+      <option value="12" selected="true">12</option>
+      <option value="14">14</option>
+      <option value="16">16</option>
+      <option value="18">18</option>
+      <option value="20">20</option>
     </param>
   </inputs>
   <outputs>
