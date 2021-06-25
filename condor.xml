@@ -15,7 +15,7 @@
       #if $model == "best":
       --model ${model}
       #else:
-      --model ${model}${invariant}${gamma}
+      --model ${model}${invariant}${rates}
       #end if
       --align ${seq}
       --tree ${tree} 
