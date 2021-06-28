@@ -12,7 +12,7 @@ ConDor is adapted to the detection of evolutionary convergence at the resolution
 The output of ConDor is a list of mutations detected as convergent as they occur more often than expected under neutral evolution. 
 
 # Help
-Please visit https://condor.pasteur.cloud/help if you have any questions regarding the use and the output of ConDor. 
+Please visit https://condor.pasteur.cloud/help if you have any questions regarding how to use ConDor and interpret the outputs. 
 
 
 
