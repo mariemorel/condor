@@ -7,9 +7,8 @@ from scipy import linalg
 import os
 import argparse
 
-from ete3 import Tree, PhyloTree
+from ete3 import PhyloTree
 
-from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from scipy import sparse
@@ -45,7 +44,7 @@ root = root_list[0]
 
 nb_residues = int(len(root)) 
 
-print(root)
+#print(root)
 
 
 frequencies = []

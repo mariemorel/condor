@@ -24,11 +24,16 @@ for rec in SeqIO.parse(align_path, 'fasta'):
     align[rec.name] = rec.seq[0:len_seq]
 
 align_df = pd.DataFrame([list(i) for i in align.values()], index = align.keys())
-align_df.replace('X', np.nan, inplace = True)
-align_df.replace('-', np.nan, inplace = True)
-align_df.replace('*', np.nan, inplace = True)
 
+all_content = set()
+for i in align_df.values:
+    all_content.update(i)
 
+to_replace = [a for a in Counter(all_content).keys() if not a in list("ARNDCQEGHILKMFPSTWYV")]
+
+for r in to_replace:
+    align_df.replace(r, np.nan, inplace = True)
+    
 AA = ['A','R','N','D','C','Q', 'E', 'G' ,'H' ,'I' ,'L' ,'K' ,'M' ,'F', 'P', 'S', 'T', 'W', 'Y', 'V']
 
 positions_to_test = []
