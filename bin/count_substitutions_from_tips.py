@@ -62,9 +62,9 @@ class Count_apparitions:
     def _recursive_count(self, node, posnum, pos):  # need to do this for each position
         if node.is_root():
             return
-        if node.name in node.up.traversed:
+        if node.name in node.up.traversed: #if node was already seen
             return
-        if node.sequence[posnum] != node.up.sequence[posnum]:
+        if node.sequence[posnum] != node.up.sequence[posnum]: #if there is a change
             node.up.traversed.add(node.name)
             # add a change towards amino acid at node and pos
             self.changes[pos][node.sequence[posnum]] += 1

@@ -3,7 +3,9 @@
 import pandas as pd
 from scipy import sparse
 
-# handle fasta files
+# mutliple correction
+import statsmodels as sm
+import statsmodels.api
 
 # handle alignment
 from Bio import AlignIO
@@ -34,6 +36,12 @@ parser.add_argument(
     "matrix_model", help="model of evolution representating the data")
 parser.add_argument(
     "min_seq", help="nb of sequences min to test convergence")
+parser.add_argument(
+    "alpha", help="threshold for multiple tests correction"
+)
+parser.add_argument(
+    "correction", help="name of multiple tests correction: holm or fdr_bh"
+)
 
 args = parser.parse_args()
 root_seq = list(args.root)
@@ -41,6 +49,8 @@ alignment_file = args.align
 ref_counting = args.ref_matrix
 nb_simu = int(args.nb_simu)
 minseq = int(args.min_seq)
+risk = float(args.alpha)
+test_type = args.correction
 
 
 list_pos = []
@@ -163,7 +173,7 @@ def compute_pvalue(posnumber, position):
         if (nb_seq >= minseq) and (aa in AA):
             aa_index = AA.index(aa)
             change = ref_df.T[posnumber][aa_index]
-            if change > 2:
+            if change > 2: #more than 2EEMs
                 variance = np.var(dense[aa_index])
                 mean = np.mean(dense[aa_index])
                 max_occur = max(load_csr[aa_index].data)
@@ -243,40 +253,24 @@ all_tests["findability"] = findability
 #############################################
 # at this step we have all the info on the substitutions
 # but we don't known which ones pass the test
-# and percentile
 #############################################
 
 
-pvalues = list(all_tests.pvalue)
-# Benjamini Hochberg
 
-pvalues.sort(reverse=True)
-for i, j in enumerate(pvalues):
-    if j <= 0.05/(len(pvalues)+1-i):
-        break
+pvals_holm = sm.stats.multitest.multipletests(all_tests.pvalue, alpha=risk, method="holm", is_sorted=False, returnsorted=False)
+pvals_fdr = sm.stats.multitest.multipletests(all_tests.pvalue, alpha=risk, method="fdr_bh", is_sorted=False, returnsorted=False)
 
-alpha = j
+all_tests["adjust_pvalue_holm_bonf"] = pvals_holm[1]
+all_tests["adjust_pvalue_benj_hoch"] = pvals_fdr[1]
 
-Percentile_list = []
-
-def compute_percentile(position, mut):
-    counts_simu = glob.glob("".join(["count_", str(position), "_named_tree_*.npz"]))[0] 
-    load_csr = sparse.load_npz(counts_simu)
-    dense = np.array(load_csr.todense())
-    Percentile_list.append(np.percentile(dense[AA.index(mut)], limit))
-
-limit = float(100 - (alpha / 10 * nb_simu))
-
-
-for pos, mut in zip(all_tests.position, all_tests.mut):
-    compute_percentile(pos, mut)
-
-all_tests["limit_accept"] = Percentile_list
-
-all_tests["detected"] = ["PASS" if i <=
-                         alpha else "NOT PASS" for i in all_tests.pvalue]
-
+if test_type == "holm":
+    all_tests["detected"] = ["PASS" if i else "NOT PASS" for i in pvals_holm[0]]
+else:
+    all_tests["detected"] = ["PASS" if i else "NOT PASS" for i in pvals_fdr[0]]
+    
+all_tests.sort_values('pvalue', inplace=True)
 all_tests.to_csv("all_results_metrics.tsv", sep="\t", index=False)
-
 detected = all_tests[all_tests["detected"] == "PASS"]
 detected.to_csv("detected_metrics.tsv", sep="\t", index=False)
+
+

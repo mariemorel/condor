@@ -26,34 +26,31 @@ NUM_AA = 20
 
 model_dict={}
 list_rates = []
-for line in open(matrices):
+for line in open(matrices): #open iqtree matrices file
     if line.startswith("model"):
         if len(list_rates) > 0:
-            model_dict[model] = list_rates
-            list_rates = []
-            model = line.split(" ")[1].strip("\n")
+            model_dict[model] = list_rates # incremente for each model a dictionnary containing the list of substitution rates. 
+            list_rates = [] # empty list for this model and start with a new one
+            model = line.split(" ")[1].strip("\n") #retrieve model name for the second model and after
         else:
-            model = line.split(" ")[1].strip("\n")
+            model = line.split(" ")[1].strip("\n") #retrieve first model name 
     elif line.strip().endswith(";"):
-        freq = [float(i) for i in line.strip().strip(";").split(" ")]
-    elif len(line.strip()) == 0:
-        pass
+        freq = [float(i) for i in line.strip().strip(";").split(" ")] # once we have all the subsitution rates --> frequencies
+    elif len(line.strip()) == 0: 
+        pass #if line empty pass 
     else:
-        list_rates.extend([float(i) for i in line.strip().split(" ")])
-    model_dict[model] = list_rates
+        list_rates.extend([float(i) for i in line.strip().split(" ")]) # fill the list of rates with rates
+    model_dict[model] = list_rates #last model
 
+MODEL_RATE_MATRIX = np.zeros(shape=(NUM_AA, NUM_AA), dtype=np.float64) #create empty matrix 20*20
+MODEL_RATE_MATRIX[np.tril_indices(NUM_AA, k=-1)] = model_dict[model_name] # fill lower triangle matrix with substitution rates 
+MODEL_RATE_MATRIX = np.maximum(MODEL_RATE_MATRIX, MODEL_RATE_MATRIX.T) #fill upper triangle matrix
 
-
-MODEL_RATE_MATRIX = np.zeros(shape=(NUM_AA, NUM_AA), dtype=np.float64)
-MODEL_RATE_MATRIX[np.tril_indices(NUM_AA, k=-1)] = model_dict[model_name]
-MODEL_RATE_MATRIX = np.maximum(MODEL_RATE_MATRIX, MODEL_RATE_MATRIX.T)
-
-
-
-pd.DataFrame(MODEL_RATE_MATRIX, index = AA_1_LETTER_CODES, columns = AA_1_LETTER_CODES).to_csv("".join([model_name, "simulator_matrix.model"]), sep="\t")
+pd.DataFrame(MODEL_RATE_MATRIX, index = AA_1_LETTER_CODES, columns = AA_1_LETTER_CODES).to_csv("".join([model_name, "simulator_matrix.model"]), sep="\t") #save substitution matrix in a format readable by simulator
 
 with open("".join([model_name,"pastml_matrix"]), 'w') as wf:
     wf.write(" ".join(["#", " ".join(AA_1_LETTER_CODES)])+"\n")
     for i in MODEL_RATE_MATRIX:
         wf.write(" ".join([str(a) for a in list(i)])+"\n")
 
+#save substitution matrix in a format readable by pastml

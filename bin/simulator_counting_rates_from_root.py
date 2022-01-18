@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 from scipy import linalg
 
-import os
 import argparse
 
 from ete3 import PhyloTree
@@ -40,9 +39,8 @@ with open(args.root) as f:
     root_list =  f.read().splitlines()
 
 
-root = root_list[0]
-
-nb_residues = int(len(root)) 
+root = root_list[0] #probabilistic root at one position
+nb_residues = int(len(root)) #should equal to nb simulations
 
 #print(root)
 
@@ -52,6 +50,7 @@ with open(args.freq) as f:
     for line in f:
         frequencies.append(float(line.split("\t")[1].strip()))
 
+#list of frequencies by aa
 
 S_df = pd.read_csv(args.matrix_model, sep="\t", index_col=0)
 # PI = np.array([0.060490222, 0.066039665, 0.044127815, 0.042109048, 0.020075899, 0.053606488,
@@ -60,7 +59,6 @@ S_df = pd.read_csv(args.matrix_model, sep="\t", index_col=0)
 PI = np.array(frequencies)
 
 S = np.array(S_df)
-
 
 def get_normalised_generator(frequencies, rate_matrix=None):
     """
@@ -98,16 +96,16 @@ class Simulation:
 
     def Simulator_choice(self, T, root):
         def process_node(node, parent_seq):
-            P = np.array(linalg.expm(Q_norm * node.dist * rate))  # 20,10
+            P = np.array(linalg.expm(Q_norm * node.dist * rate))  # 20,10 #matrix exp of normalized substitution matrix * length of branch *evolution rate
             target_seq = self._random_choice_prob_index(
                 P[parent_seq, :], axis=1
-            )  # create a list for the simulations
-            sequence_aa = "".join([amino_acid[i] for i in target_seq])
-            self.align[node.name] = sequence_aa
+            )  # create a list for the simulations: random sample of a vector of indexes corresponding to target amino acids knowing the parent ones
+            sequence_aa = "".join([amino_acid[i] for i in target_seq]) #transform it in amino acids
+            self.align[node.name] = sequence_aa #attribute simulated sequence to node
             self.fasta_align.append(
                 SeqRecord(Seq(sequence_aa), node.name,
                           name=node.name, description="")
-            )
+            ) #add simulated sequence in fasta
             for child in node.children:  # recursive
                 process_node(child, target_seq)
 
@@ -115,12 +113,12 @@ class Simulation:
             [amino_acid.index(i) for i in root]
         )  # fix the root as a array
         for child in T.children:
-            process_node(child, parent_seq)
+            process_node(child, parent_seq) #first iteration from root
 
 start_time = time.time()
 align_simu = Simulation()
 align_simu.Simulator_choice(tree, root)
-print("--- %s seconds ---" % (time.time() - start_time))
+#print("--- %s seconds ---" % (time.time() - start_time))
 
 align_txt = {}
 for rec in align_simu.fasta_align:
@@ -132,15 +130,12 @@ root_sequence = SeqRecord(Seq(root),
                           tree.name, name=tree.name, description="")
 align_txt[root_sequence.name] = root_sequence.seq
 
-# fonction pour compter les apparitions indépendantes d'un acide aminé en partant des feuilles
-
-
+# function to count EEMs from tips
 class Count_lineages:
     counter_emergence = np.zeros(
         shape=(len(amino_acid), nb_residues))  # attribut de la classe,
-    #fasta_align = []
 
-    def _annotate_lineages(self, node):
+    def _annotate_lineages(self, node): ##test if ancestral sequences have same aa as tip.
         if node.is_leaf():
             test = dict()
             for aa in amino_acid:
@@ -176,7 +171,7 @@ class Count_lineages:
 
 start_time = time.time()
 Count_lineages().Traverse_count(tree)
-print("--- %s seconds ---" % (time.time() - start_time))
+#print("--- %s seconds ---" % (time.time() - start_time))
 
 ONE_POS = pd.DataFrame(
     Count_lineages.counter_emergence.astype(int), index=amino_acid)
