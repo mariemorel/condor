@@ -1,0 +1,9 @@
+work*
+realdata.*
+bin/old
+.nextflow
+*.out*
+*.log*
+*report*
+*html*
+.vscode/
