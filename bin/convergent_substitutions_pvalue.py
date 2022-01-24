@@ -260,14 +260,18 @@ all_tests["findability"] = findability
 pvals_holm = sm.stats.multitest.multipletests(all_tests.pvalue, alpha=risk, method="holm", is_sorted=False, returnsorted=False)
 pvals_fdr = sm.stats.multitest.multipletests(all_tests.pvalue, alpha=risk, method="fdr_bh", is_sorted=False, returnsorted=False)
 
-all_tests["adjust_pvalue_holm_bonf"] = pvals_holm[1]
-all_tests["adjust_pvalue_benj_hoch"] = pvals_fdr[1]
+
 
 if test_type == "holm":
+    all_tests["adjust_pvalue"] = list(pvals_holm[1])
+    all_tests["adjust_pvalue_fdr"] = list(pvals_fdr[1])
     all_tests["detected"] = ["PASS" if i else "NOT PASS" for i in pvals_holm[0]]
+
 else:
+    all_tests["adjust_pvalue"] = list(pvals_fdr[1])
+    all_tests["adjust_pvalue_holm"] = list(pvals_holm[1])
     all_tests["detected"] = ["PASS" if i else "NOT PASS" for i in pvals_fdr[0]]
-    
+     
 all_tests.sort_values('pvalue', inplace=True)
 all_tests.to_csv("all_results_metrics.tsv", sep="\t", index=False)
 detected = all_tests[all_tests["detected"] == "PASS"]
