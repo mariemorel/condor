@@ -20,6 +20,7 @@
       --align ${seq}
       --tree ${tree} 
       --outgroup ${outgroup}
+      --phenotype ${phenotype}
       --resdir results
       --min_seq ${minconvseqs}
       --nb_simu 10000;
@@ -29,6 +30,7 @@
     <param name="seq" format="fasta" type="data" label="Alignment file" help="Fasta format"/>
     <param name="tree" format="nhx" type="data" label="Tree file" help="Newick format"/>
     <param name="outgroup" format="txt" type="data" label="Outgroup file" help="Txt format, one taxon per line"/>
+    <param name="phenotype" format="txt" type="data" label="Phenotype file" help="Txt format, taxon with convergent phenotype, one taxon per line"/>
     <param name="model" type="select" label="Evolutionary model to use">
       <option value="best" selected="true">Best (IQ-TREE Model finder)</option>
       <option value="POISSON" selected="false">POISSON</option>
@@ -70,19 +72,28 @@
     <param name="rates" type="select" label="Rate heterogeneity">
       <option value="" selected="true">No rate heteorogeneity</option>
       <option value="+G4" selected="false">+G4</option>
+      <option value="+G5" selected="false">+G5</option>
       <option value="+G6" selected="false">+G6</option>
       <option value="+G8" selected="false">+G8</option>
+      <option value="+G10" selected="false">+G10</option>
+      <option value="+R3" selected="false">+R3</option>
       <option value="+R4" selected="false">+R4</option>
       <option value="+R6" selected="false">+R6</option>
       <option value="+R8" selected="false">+R8</option>
+      <option value="+R10" selected="false">+R10</option>
     </param>
     <param name="minconvseqs" type="select" label="Minimum number of convergent sequences">
       <option value="2">2</option>
+      <option value="3">3</option>
       <option value="4">4</option>
+      <option value="5">5</option>
       <option value="6">6</option>
+      <option value="7">7</option>
       <option value="8">8</option>
-      <option value="10">10</option>
-      <option value="12" selected="true">12</option>
+      <option value="9">9</option>
+      <option value="10" selected="true">10</option>
+      <option value="11">11</option>
+      <option value="12">12</option>
       <option value="14">14</option>
       <option value="16">16</option>
       <option value="18">18</option>
