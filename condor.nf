@@ -1,11 +1,26 @@
 
 path_file = "/pasteur/zeus/projets/p01/Evolbioinfo/users/mamorel/Projet_Convergence/Data/"
 
+/*
+//c3c4 sedges
+params.align = path_file + "args/raw/C3C4/cyp_coding.aa.coor_mays.fa"
+params.tree = path_file + "args/raw/C3C4/cyp_coding.phy_phyml_tree.txt"
+params.outgroup = path_file+"args/raw/C3C4/outgroup.txt"
+*/
 
-//HIV real data
-params.align = path_file + "args/processed/naturepaper/B.pol.aa.woutgroup.norecomb.monophyletic.fasta"
-params.tree = path_file + "trees/processed/naturepaper/root.B.pol.aa.woutgroup.norecomb.monophyletic.MLfreq.treefile"
-params.outgroup = path_file+"args/processed/naturepaper/outgroup.losalamos.names"
+/*
+//HIV africa
+params.align = path_file + "args/raw/africa/recomb_jphmm/align.noCRF.jphmm_outgroup.aa.fa"
+params.tree = path_file + "args/raw/africa/recomb_jphmm/root.align.noCRF.jphmm_outgroup.fa.treefile"
+params.outgroup = path_file+"args/raw/africa/recomb_jphmm/outgroup.txt"
+*/
+
+
+//synthetic africa
+params.align = path_file+ "args/processed/synthetic_africa/synthetic_out_simulated_RTafrica_5.fasta"
+params.tree = path_file+ "args/processed/africa/recomb_jphmm/root.align.noCRF.jphmm_outgroup.fa.treefile"
+params.outgroup = path_file+"args/processed/africa/recomb_jphmm/outgroup.txt"
+params.phenotype = path_file+"args/processed/africa/recomb_jphmm/id_phenotype.txt"
 
 
 /*
@@ -15,21 +30,12 @@ params.tree = path_file + "args/raw/Rhodopsin/tree_rerooted.nhx"
 params.outgroup = path_file+"args/raw/Rhodopsin/outgroup_bis.txt"
 */
 
-
-/*
-//synthetic data
-params.align = "/pasteur/zeus/projets/p01/Evolbioinfo/users/mamorel/Projet_Convergence/condor-analysis/data/synthetic_HIV/synthetic_align_DRM.fasta"
-params.tree = "/pasteur/zeus/projets/p01/Evolbioinfo/users/mamorel/Projet_Convergence/condor-analysis/data/synthetic_HIV/preprocessing/reroot.B.pol.aa.norecomb.noPRandRTdrm.treefile"
-params.outgroup = path_file+"trees/processed/naturepaper/maskedDRM/B.pol.aa.woutgroup.norecomb.maskeddrm.outgroup"
-*/
-
-
-params.resdir=path_file+"results/naturepaper/HIVb+R9/" //do not forget to change the resdir
-params.model = "HIVb+R9" // best: will choose the best model, other wise will take the given model
+params.resdir=path_file+"results/synthetic_africa/JTT_R4_nodrm5_bis/" //do not forget to change the resdir
+params.model = "JTT+R4" // best: will choose the best model, other wise will take the given model
 params.matrices = "$baseDir/assets/protein_model.txt"
-
+params.correlation = "all"
 params.nb_simu = 10000 //number of simulations to perform
-params.min_seq = 12 //mutations in at least min_seq to be tested
+params.min_seq = 10 //at least (11 for rhodopsine, 2 for c3c4, 10for synthetic, 10 for real HIV)
 params.freqmode = "Fmodel" //if something else: FO. Need to be changed to allow other frequencies
 
 params.correction = 'holm' // holm bonferroni correction , could be fdr_bh for benjamini hochberg
@@ -38,6 +44,7 @@ params.alpha = 0.1 //limit threshold (included)
 align = file(params.align)
 tree = file(params.tree)
 outgroup = file(params.outgroup)
+phenotype = file(params.phenotype)
 matrices = file(params.matrices)
 resdir=file(params.resdir)
 resdir.with {mkdirs()}
@@ -48,11 +55,12 @@ model = params.model
 alpha = params.alpha
 freqmode = params.freqmode
 correction = params.correction
+correlation = params.correlation
 
 //nb seqs and length align
 //run iqtree model finder and take the best model or take the model given by user
 process find_model {
-    label 'iqtree'
+    label 'iqtree2'
 
     input:
     file tree
@@ -131,7 +139,7 @@ Stats_align = Length.merge(Nb_seq)
 
 //reoptimize tree branch lengths and estimate rates and frequencies by ML 
 process reoptimize_tree {
-    label 'iqtree'
+    label 'iqtree2'
 
     input:
     val freqmode
@@ -151,7 +159,7 @@ process reoptimize_tree {
     //run iqtree with mode given by user. Reestimation rates. Frequencies of model retrieved from matrices file. 
     '''
     iqtreemode=`cat !{iqtree_mode}` 
-    iqtree -m ${iqtreemode} -nt !{task.cpus} -safe -s !{align} -te !{tree} -wsr -pre align
+    iqtree -m ${iqtreemode} -nt !{task.cpus} -s !{align} -te !{tree} -wsr -pre align
     tail -n+10 align.rate | cut -f 2 > reestimated_rate
     len=`wc -l reestimated_rate | cut -d " " -f 1`
     if [ "$len" -eq "0" ] ; then for i in {1..!{length}} ; do echo 1 >> reestimated_rate ;done ;  fi
@@ -166,7 +174,7 @@ process reoptimize_tree {
     '''
     sed '/+F/!s/$/+FO/' !{iqtree_mode} | sed 's/+F[^+$]*/+FO/' > corrected_model
     iqtreemode=`cat corrected_model`
-    iqtree -m ${iqtreemode} -nt !{task.cpus} -safe -s !{align} -te !{tree} -wsr -pre align
+    iqtree -m ${iqtreemode} -nt !{task.cpus} -s !{align} -te !{tree} -wsr -pre align
     tail -n+10 align.rate | cut -f 2 > reestimated_rate
     len=`wc -l reestimated_rate | cut -d " " -f 1`
     if [ "$len" -eq "0" ] ; then for i in {1..!{length}} ; do echo 1 >> reestimated_rate ;done ;  fi
@@ -183,7 +191,7 @@ process tree_rename{
     file outgroup
     output:
     file "named_tree" into SimulatorChannel, NamedtreeChannel
-    file "rooted_*" into RootedtreeChannel
+    file "rooted_*" into RootedtreeChannel, BayestreeChannel
 
     shell:
     //Remove branch length of root
@@ -349,11 +357,152 @@ process conclude_convergence{
     //named*.phy
      
     output:
-    tuple file("detected_metrics.tsv"), file("all_results_metrics.tsv") 
+    tuple file("detected_metrics.tsv"), file("all_results_metrics.tsv") into BayesChannel
 
     shell:
     '''
     R=`cat !{root}`
     convergent_substitutions_pvalue.py !{positions} ${R} !{rate} !{align} !{ref_matrix} !{substitutions} !{nb_simu} !{freq} !{simulation_model} !{min_seq} !{alpha} !{correction}
     '''
+}
+
+process prepare_BT {
+    conda '/pasteur/appa/homes/mamorel/miniconda3/envs/jupyter-notebook'
+    publishDir "${resdir}", mode: 'copy'
+    //label 'python'
+    input:
+    file align
+    tuple file(detected), file(tested) from BayesChannel
+    file phenotype 
+    val correlation
+
+    output: 
+    file "*binary_tested_sites.tsv" into BinaryTraits, BinaryBayes
+    shell:
+    if ( correlation == "all" )
+    '''
+    bayes_traits_preps.py !{align} !{tested} !{phenotype}
+    '''
+    else if ( correlation == "detected" )
+    '''
+    bayes_traits_preps.py !{align} !{detected} !{phenotype}
+    '''
+    else
+    error "Invalid bayesTraits mode: ${correlation}"
+}
+
+process prepare_tree {
+    label 'gotree'
+    input: 
+    file tree from BayestreeChannel 
+    output:
+    file "root_tree.nx" into NexusTree
+    shell:
+    '''
+    gotree stats tips -i !{tree} | cut -f 4 | tail -n+2 > names.treefile.txt
+    END=`wc -l names.treefile.txt | cut -d ' ' -f 1`
+    for (( i=1; i<=${END}; i++ )); do echo $i >> id.treefile.txt ; done
+    paste id.treefile.txt names.treefile.txt > map_file
+    gotree rename -m map_file -r -i !{tree} -o !{tree}.rename
+    gotree support clear -i !{tree}.rename | gotree reformat nexus -o !{tree}.rename.nx
+    echo ';\n' >> map_file
+    sed '/^BEGIN TREES;/a TRANSLATE\n' !{tree}.rename.nx > test_tree.nx
+    sed -e '/^TRANSLATE/r map_file' test_tree.nx > root_tree.nx
+    '''
+}
+
+process DataTraits {
+    input: 
+    file binary from BinaryTraits
+    output:
+    file ("data*") into BayesTraits mode flatten
+    shell:
+    ''' 
+    END=`awk -F '\t' '{print NF}' !{binary} | sort -nu | tail -n 1`
+    for (( i=2; i<=$((${END}-1)); i++ )); do cut -f 1,$i,$END !{binary} | tail -n+2 > data_$i.txt ; done
+    '''
+}
+
+BayesTraits
+    .map{it -> [it.getBaseName().split('_')[1] , it]}
+    .map{it -> [Integer.parseInt(it[0])%50, it[1] ]}
+    .groupTuple()
+    .set{ SplittedBayesTraits }
+    
+
+process BayesTraits {
+    errorStrategy 'retry'
+    maxRetries 3
+    memory "5G" 
+    input: 
+    tuple val(id), file(data_list) from SplittedBayesTraits
+    file nx_tree from NexusTree
+    output:
+    file ("*Stones*") into Stones mode flatten
+    shell:
+    '''
+    for data in `ls data*.txt` ; do 
+    y=`echo $data` 
+    x=${y//[!0-9]/} 
+    echo -e  "3\n2\nPriorAll uniform 0 100\nStones 100 1000\nLogFile Dependent_MCMC_10_${x}\nRun" > cmd_MCMC$x.txt;
+    BayesTraitsV3 !{nx_tree} $data < cmd_MCMC$x.txt; 
+    echo -e  "2\n2\nPriorAll uniform 0 100\nStones 100 1000\nLogFile Independent_MCMC_10_${x}\nRun" > cmd_Independent_MCMC$x.txt; 
+    BayesTraitsV3 !{nx_tree} $data < cmd_Independent_MCMC$x.txt; done
+    '''
+}
+
+Collect_stones = Stones.collect()
+
+process BayesFactor {
+    input: 
+    file stones from Collect_stones
+    file nx_tree from NexusTree
+    file binary from BinaryBayes
+    output:
+    tuple file(binary), file ("BayesFactor.txt") into CorrelationChannel
+    shell:
+    '''
+    END=`awk -F '\t' '{print NF}' !{binary} | sort -nu | tail -n 1`
+    for (( i=2; i<=$((${END}-1)); i++ )); do printf $i"\t" ; grep "Log marginal likelihood:" Dependent_MCMC_10_$i.Stones.txt | cut -f 2 ; done > Dependent_results.txt
+    for (( i=2; i<=$((${END}-1)); i++ )); do printf $i"\t" ; grep "Log marginal likelihood:" Independent_MCMC_10_$i.Stones.txt | cut -f 2 ; done > Independent_results.txt
+    paste Dependent_results.txt Independent_results.txt > Dep_Indep_results.txt
+    while read p; do
+        d=`echo $p | awk -F ' ' '{print $2}'`;
+        i=`echo $p | awk -F ' ' '{print $4}'`;
+        echo "2*($d- $i)" | bc >> tmp
+    done <Dep_Indep_results.txt
+    for i in `head -n 1 binary_tested_sites.tsv` ; do echo $i ; done | head -n -1 > names.txt
+    paste Dep_Indep_results.txt tmp names.txt > BayesFactor.txt
+    '''
+}
+
+process Correlation {
+    conda '/pasteur/appa/homes/mamorel/miniconda3/envs/jupyter-notebook'
+    publishDir "${resdir}", mode: 'copy'
+    input: 
+    tuple file (binary), file (bayesfactor) from CorrelationChannel
+    output:
+    file ("BayesFactor.txt")
+    script:
+    '''
+    #!/usr/bin/env python
+    
+    import pandas as pd
+    from collections import Counter
+    
+    binary_df = pd.read_csv("binary_tested_sites.tsv",sep='\t')
+    bayes_df = pd.read_csv("BayesFactor.txt", header = None, sep='\t', names = ["x1", "log-dep", "x2", "log-indep", "BF", "posmut"])
+    bayes_df.drop(["x1", "x2"], axis=1, inplace = True)
+    corr = []
+    for pos_mut in binary_df.columns[1:-1]:
+        counts = Counter(binary_df[(binary_df[pos_mut]) == 1 ].phenotype)
+        if counts[1] > counts[0]:
+            corr.append("positive")
+        else:
+            corr.append("negative")
+    
+    bayes_df["correlation"] = corr
+    bayes_df.to_csv("BayesFactor.txt", sep='\t', index=None)
+    '''
+
 }
