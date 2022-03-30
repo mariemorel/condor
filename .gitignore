@@ -1,6 +1,8 @@
 work*
 realdata.*
 bin/old
+bin/pars_fasta.py
+bin/pastml_fasta_drm.py
 .nextflow
 *.out*
 *.log*
