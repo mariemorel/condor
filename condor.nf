@@ -40,6 +40,7 @@ params.freqmode = "Fmodel" //if something else: FO. Need to be changed to allow 
 
 params.correction = 'holm' // holm bonferroni correction , could be fdr_bh for benjamini hochberg
 params.alpha = 0.1 //limit threshold (included)
+params.bayes = 10
 
 align = file(params.align)
 tree = file(params.tree)
@@ -56,6 +57,7 @@ alpha = params.alpha
 freqmode = params.freqmode
 correction = params.correction
 correlation = params.correlation
+bayes = params.bayes
 
 //nb seqs and length align
 //run iqtree model finder and take the best model or take the model given by user
@@ -357,7 +359,7 @@ process conclude_convergence{
     //named*.phy
      
     output:
-    tuple file("detected_metrics.tsv"), file("all_results_metrics.tsv") into BayesChannel
+    tuple file("detected_metrics.tsv"), file("all_results_metrics.tsv") into BayesChannel, MergeChannel
 
     shell:
     '''
@@ -428,7 +430,8 @@ BayesTraits
     .map{it -> [Integer.parseInt(it[0])%50, it[1] ]}
     .groupTuple()
     .set{ SplittedBayesTraits }
-    
+
+//could be replaced by maxForks 50   
 
 process BayesTraits {
     errorStrategy 'retry'
@@ -480,29 +483,14 @@ process Correlation {
     conda '/pasteur/appa/homes/mamorel/miniconda3/envs/jupyter-notebook'
     publishDir "${resdir}", mode: 'copy'
     input: 
+    val bayes
     tuple file (binary), file (bayesfactor) from CorrelationChannel
+    tuple file (detected), file(tested) from MergeChannel
     output:
-    file ("BayesFactor.txt")
+    tuple file ("BayesFactor.txt"), file("condor_tested_results.tsv"), file("condor_detected_results.tsv")
     script:
     '''
-    #!/usr/bin/env python
-    
-    import pandas as pd
-    from collections import Counter
-    
-    binary_df = pd.read_csv("binary_tested_sites.tsv",sep='\t')
-    bayes_df = pd.read_csv("BayesFactor.txt", header = None, sep='\t', names = ["x1", "log-dep", "x2", "log-indep", "BF", "posmut"])
-    bayes_df.drop(["x1", "x2"], axis=1, inplace = True)
-    corr = []
-    for pos_mut in binary_df.columns[1:-1]:
-        counts = Counter(binary_df[(binary_df[pos_mut]) == 1 ].phenotype)
-        if counts[1] > counts[0]:
-            corr.append("positive")
-        else:
-            corr.append("negative")
-    
-    bayes_df["correlation"] = corr
-    bayes_df.to_csv("BayesFactor.txt", sep='\t', index=None)
+    merge_results.py !{bayesfactor} !{binary} !{bayes} !{tested}
     '''
-
+    
 }
