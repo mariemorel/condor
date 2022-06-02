@@ -1,6 +1,6 @@
-# Sensitive Detection of Site-wise Convergent Evolution in Large Protein Alignments with ConDor
+# ACCURATE DETECTION OF CONVERGENT MUTATIONS IN PROTEIN ALIGNMENTS WITH CONDOR
 
-### Marie MOREL, Frédéric LEMOINE and Olivier GASCUEL
+### Marie MOREL, Frédéric LEMOINE, Anna ZHUKOVA and Olivier GASCUEL
 
 Welcome to ConDor workflow repository ! 
 
