@@ -23,6 +23,7 @@
       --phenotype ${phenotype}
       --resdir results
       --min_seq ${minconvseqs}
+      --min_eem ${mineems}
       --nb_simu 10000;
     ]]>
   </command>
@@ -82,7 +83,7 @@
       <option value="+R8" selected="false">+R8</option>
       <option value="+R10" selected="false">+R10</option>
     </param>
-    <param name="minconvseqs" type="select" label="Minimum number of convergent sequences">
+    <param name="minconvseqs" type="select" label="Minimum number of convergent sequences (>=)">
       <option value="2">2</option>
       <option value="3">3</option>
       <option value="4">4</option>
@@ -92,6 +93,24 @@
       <option value="8">8</option>
       <option value="9">9</option>
       <option value="10" selected="true">10</option>
+      <option value="11">11</option>
+      <option value="12">12</option>
+      <option value="14">14</option>
+      <option value="16">16</option>
+      <option value="18">18</option>
+      <option value="20">20</option>
+    </param>
+    <param name="mineems" type="select" label="Minimum number of emergence event of a mutation (>)">
+      <option value="1">1</option>
+      <option value="2" selected="true">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
+      <option value="7">7</option>
+      <option value="8">8</option>
+      <option value="9">9</option>
+      <option value="10">10</option>
       <option value="11">11</option>
       <option value="12">12</option>
       <option value="14">14</option>
