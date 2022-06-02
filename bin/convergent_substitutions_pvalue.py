@@ -37,6 +37,8 @@ parser.add_argument(
 parser.add_argument(
     "min_seq", help="nb of sequences min to test convergence")
 parser.add_argument(
+    "min_eems", help="nb of emergence min to test convergence")
+parser.add_argument(
     "alpha", help="threshold for multiple tests correction"
 )
 parser.add_argument(
@@ -49,6 +51,7 @@ alignment_file = args.align
 ref_counting = args.ref_matrix
 nb_simu = int(args.nb_simu)
 minseq = int(args.min_seq)
+mineems = int(args.min_eems)
 risk = float(args.alpha)
 test_type = args.correction
 
@@ -173,7 +176,7 @@ def compute_pvalue(posnumber, position):
         if (nb_seq >= minseq) and (aa in AA):
             aa_index = AA.index(aa)
             change = ref_df.T[posnumber][aa_index]
-            if change > 2: #more than 2EEMs
+            if change > mineems: #strictly more than x EEMs
                 variance = np.var(dense[aa_index])
                 mean = np.mean(dense[aa_index])
                 max_occur = max(load_csr[aa_index].data)

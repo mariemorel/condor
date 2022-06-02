@@ -10,9 +10,10 @@ params.outgroup = path_file+"args/raw/C3C4/outgroup.txt"
 
 /*
 //HIV africa
-params.align = path_file + "args/raw/africa/recomb_jphmm/align.noCRF.jphmm_outgroup.aa.fa"
-params.tree = path_file + "args/raw/africa/recomb_jphmm/root.align.noCRF.jphmm_outgroup.fa.treefile"
-params.outgroup = path_file+"args/raw/africa/recomb_jphmm/outgroup.txt"
+params.align = path_file + "args/processed/africa/recomb_jphmm/align.noCRF.jphmm_outgroup.aa.fa"
+params.tree = path_file + "args/processed/africa/recomb_jphmm/root.align.noCRF.jphmm_outgroup.fa.treefile"
+params.outgroup = path_file+"args/processed/africa/recomb_jphmm/outgroup.txt"
+params.phenotype = path_file+"args/processed/africa/recomb_jphmm/id_phenotype.txt"
 */
 
 
@@ -36,6 +37,7 @@ params.matrices = "$baseDir/assets/protein_model.txt"
 params.correlation = "all"
 params.nb_simu = 10000 //number of simulations to perform
 params.min_seq = 10 //at least (11 for rhodopsine, 2 for c3c4, 10for synthetic, 10 for real HIV)
+params.min_eem = 2 //strictly more than 2 EEMs
 params.freqmode = "Fmodel" //if something else: FO. Need to be changed to allow other frequencies
 
 params.correction = 'holm' // holm bonferroni correction , could be fdr_bh for benjamini hochberg
@@ -352,7 +354,8 @@ process conclude_convergence{
     file (counts) from Collect_simulations
     file(root) from Root_seq //only the interesting positions
     val nb_simu
-    val min_seq
+    val min_seq // >= 
+    val min_eem // > strict
     val alpha //0.1
     val correction //holm or fdr_bh
 
@@ -480,7 +483,7 @@ process BayesFactor {
 }
 
 process Correlation {
-    conda '/pasteur/appa/homes/mamorel/miniconda3/envs/jupyter-notebook'
+    label 'python'
     publishDir "${resdir}", mode: 'copy'
     input: 
     val bayes
