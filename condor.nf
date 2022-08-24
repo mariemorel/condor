@@ -6,6 +6,15 @@ path_file = "/pasteur/zeus/projets/p01/Evolbioinfo/users/mamorel/Projet_Converge
 params.align = path_file + "args/raw/C3C4/cyp_coding.aa.coor_mays.fa"
 params.tree = path_file + "args/raw/C3C4/cyp_coding.phy_phyml_tree.txt"
 params.outgroup = path_file+"args/raw/C3C4/outgroup.txt"
+params.phenotype = path_file+"args/raw/C3C4/besnard2009_convergent_species.txt"
+*/
+
+/*
+//no c3c4 clade sedges adapted pheno
+params.align = path_file + "args/processed/c3c4/no_c3c4_clade/cyp_coding_noc3c4.aa.coor_mays.fa"
+params.tree = path_file + "args/processed/c3c4/no_c3c4_clade/cyp_coding_noc3c4.phy_phyml_tree.txt"
+params.outgroup = path_file+"args/processed/c3c4/no_c3c4_clade/outgroup.txt"
+params.phenotype = path_file+"args/processed/c3c4/no_c3c4_clade/besnard2009_c4pheno.txt" //phenotype could be optional ???
 */
 
 /*
@@ -16,55 +25,69 @@ params.outgroup = path_file+"args/processed/africa/recomb_jphmm/outgroup.txt"
 params.phenotype = path_file+"args/processed/africa/recomb_jphmm/id_phenotype.txt"
 */
 
-
+/*
 //synthetic africa
 params.align = path_file+ "args/processed/synthetic_africa/synthetic_out_simulated_RTafrica_5.fasta"
 params.tree = path_file+ "args/processed/africa/recomb_jphmm/root.align.noCRF.jphmm_outgroup.fa.treefile"
 params.outgroup = path_file+"args/processed/africa/recomb_jphmm/outgroup.txt"
 params.phenotype = path_file+"args/processed/africa/recomb_jphmm/id_phenotype.txt"
-
+*/
 
 /*
 //rhodopsin 
-params.align = path_file + "args/raw/Rhodopsin/lessgappy.align_reroot.fa" 
-params.tree = path_file + "args/raw/Rhodopsin/tree_rerooted.nhx"
-params.outgroup = path_file+"args/raw/Rhodopsin/outgroup_bis.txt"
+params.align = path_file + "args/processed/rhodopsin/lessgappy.align_reroot.fa" 
+params.tree = path_file + "args/processed/rhodopsin/tree_rerooted.nhx"
+params.outgroup = path_file+"args/processed/rhodopsin/outgroup_bis.txt"
+params.phenotype = path_file+"args/processed/rhodopsin/id_phenotype_marine.txt" //id_phenotype_marine.txt id_phenotype.txt
 */
 
-params.resdir=path_file+"results/synthetic_africa/JTT_R4_nodrm5_bis/" //do not forget to change the resdir
-params.model = "JTT+R4" // best: will choose the best model, other wise will take the given model
+//declaration of parameters
+params.resdir=path_file+"results/c3c4_phenotype/JTT+R3_noc3c4pheno/" //do not forget to change the resdir
+params.model = "JTT+R3" // best: will choose the best model, other wise will take the given model
 params.matrices = "$baseDir/assets/protein_model.txt"
-params.correlation = "all"
 params.nb_simu = 10000 //number of simulations to perform
-params.min_seq = 10 //at least (11 for rhodopsine, 2 for c3c4, 10for synthetic, 10 for real HIV)
+params.min_seq = 2 //at least (11 for rhodopsine, 2 for c3c4, 10 for synthetic and HIV)
 params.min_eem = 2 //strictly more than 2 EEMs
-params.freqmode = "Fmodel" //if something else: FO. Need to be changed to allow other frequencies
+params.freqmode = "Fmodel" //Fmodel, if something else: FO. Need to be changed to allow other frequencies
 
+/////OPTIONAL PARAMETERS
+params.branches = "correlation" // condor, correlation, emergence. 
+//params.branches_eem = "true"
+//params.branches_corr = "true"
+params.correlation = "all" //detected
 params.correction = 'holm' // holm bonferroni correction , could be fdr_bh for benjamini hochberg
 params.alpha = 0.1 //limit threshold (included)
-params.bayes = 10
+params.bayes = 2
 
+//creation of parameters
 align = file(params.align)
 tree = file(params.tree)
 outgroup = file(params.outgroup)
-phenotype = file(params.phenotype)
 matrices = file(params.matrices)
+model = params.model
+nb_simu = params.nb_simu
+min_seq = params.min_seq
+min_eem = params.min_eem
+freqmode = params.freqmode
+
+//////////// Optional parameters
+phenotype = file(params.phenotype)
+correction = params.correction
+correlation = params.correlation //choose between holm bonferroni and B-Hochberg
+alpha = params.alpha //risk 0.1 0.05
+bayes = params.bayes //limit log Bayes Factor 2 20
+
+//branches = params.branches
+branches_corr = params.branches_corr
+branches_eem = params.branches_eem
+
+// create result directory
 resdir=file(params.resdir)
 resdir.with {mkdirs()}
 
-nb_simu = params.nb_simu
-min_seq = params.min_seq
-model = params.model
-alpha = params.alpha
-freqmode = params.freqmode
-correction = params.correction
-correlation = params.correlation
-bayes = params.bayes
-
-//nb seqs and length align
 //run iqtree model finder and take the best model or take the model given by user
 process find_model {
-    label 'iqtree2'
+    label 'iqtree'
 
     input:
     file tree
@@ -86,7 +109,7 @@ process find_model {
     '''
 }
 
-
+//transform rate matrix in proper format
 process build_matrices {
     label 'python'
 
@@ -143,7 +166,7 @@ Stats_align = Length.merge(Nb_seq)
 
 //reoptimize tree branch lengths and estimate rates and frequencies by ML 
 process reoptimize_tree {
-    label 'iqtree2'
+    label 'iqtree'
 
     input:
     val freqmode
@@ -285,9 +308,32 @@ process pre_count{
     shell:
     //transform pastml outpout in a fasta file and retrieve root with marginal proba
     '''
-    pastml_fasta.py !{pastml_acr} !{positions} !{length} !{marginal_root} !{nb_simu} test_
+    pastml_fasta.py !{pastml_acr} !{positions} !{length} !{marginal_root} !{nb_simu} ACR_
     '''
 }
+
+process count_apparitions{
+    label 'python'
+
+    input :
+    val min_eem 
+    tuple file(positions), file(rate), file(tree), file (align) from python_count
+    output : 
+    tuple file(rate), file(align), file ("*substitutions_even_root.tsv"), file("*substitutions_aa_tips_per_base.tsv") into Subscribe_matrices, Ref_couting
+    file "positions_to_test_eem.txt" into Positions_simu, Positions_eem //num from 1
+    file ("pos_mut_to_test_eem.txt") into Positions_correlation
+    
+    shell:
+    //count EEMs from real data acr
+    //min eem is strict >
+    '''
+    count_substitutions_from_tips.py !{align} !{tree} !{positions} !{min_eem} 
+    '''
+}
+
+Subscribe_matrices.subscribe{rate, align, freqs, substitutions ->  freqs.copyTo(file("${resdir}").resolve('ref_substitutions.txt'));}
+
+//////////END OF FIRST PART OF WORKFLOW : OBSERVED NB OF EEMS. 
 
 //my simulator of sequence in python, using root, nb simulations and the ROOTED tree.
 process simulator {
@@ -295,9 +341,10 @@ process simulator {
     //maxRetries 3
     label 'python'
 
-publishDir "${resdir}", pattern: "count*.tsv.gz", mode: 'copy'
+    publishDir "${resdir}", pattern: "count*.tsv.gz", mode: 'copy'
     input : 
-    each x from ListPositionsChannel.readLines() //each tested positions (num from 1)
+    //each x from ListPositionsChannel.readLines() //each tested positions (num from 1)
+    each x from Positions_simu.flatMap{it.readLines()}
     file simulation_model from SimulatorMatrix //substitution matrix 
     file (rates) from RatesChannel //reestimated rates
     file (freq) from FreqChannel //frequencies (model or optimised)
@@ -306,6 +353,10 @@ publishDir "${resdir}", pattern: "count*.tsv.gz", mode: 'copy'
 
     output : 
     file("count*npz") into MysimulationsChannel
+
+    //when: branches_eem == "true" //("emergence" || "condor")
+    when : branches == "emergence" || branches == 'condor'
+
     shell:
     //simulate and count EEMs from tips
     '''
@@ -319,28 +370,6 @@ publishDir "${resdir}", pattern: "count*.tsv.gz", mode: 'copy'
 
 Collect_simulations = MysimulationsChannel.collect()
 
-//fasta file into a tab separated table understandable by pastml
-//only input needed is align 
-//56 different alignments 
-
-process count_apparitions{
-    label 'python'
-
-    input : 
-    tuple file(positions), file(rate), file(tree), file (align) from python_count
-    output : 
-    tuple file(positions), file(rate), file(align), file ("*substitutions_even_root.tsv"), file("*substitutions_aa_tips_per_base.tsv") into Subscribe_matrices, Ref_couting
-    
-    shell:
-    //count EEMs from real data acr
-    '''
-    count_substitutions_from_tips.py !{align} !{tree} !{positions}
-    '''
-}
-
-Subscribe_matrices.subscribe{positions, rate, align, freqs, substitutions ->  freqs.copyTo(file("${resdir}").resolve('ref_substitutions.txt'));}
- 
-// should 
 process conclude_convergence{
     label 'python' //need to add statsmodels.api and statsmodels.stats in the python docker
 
@@ -350,9 +379,10 @@ process conclude_convergence{
     file simulation_model from SimulatorMatrix
     file align 
     file (freq) from FrequenciesChannel
-    tuple file(positions), file(rate), file(acralign), file(ref_matrix), file(substitutions) from Ref_couting //rates for all positions
+    tuple file(rate), file(acralign), file(ref_matrix), file(substitutions) from Ref_couting //rates for all positions
     file (counts) from Collect_simulations
-    file(root) from Root_seq //only the interesting positions
+    file(root) from Root_seq //only the interesting positions starts from 1
+    file(positions) from Positions_eem // starts from 1
     val nb_simu
     val min_seq // >= 
     val min_eem // > strict
@@ -362,28 +392,42 @@ process conclude_convergence{
     //named*.phy
      
     output:
-    tuple file("detected_metrics.tsv"), file("all_results_metrics.tsv") into BayesChannel, MergeChannel
+    tuple file("detected_metrics.tsv"), file("all_results_metrics.tsv") into EmergenceChannel, MergeChannel
 
     shell:
     '''
-    R=`cat !{root}`
-    convergent_substitutions_pvalue.py !{positions} ${R} !{rate} !{align} !{ref_matrix} !{substitutions} !{nb_simu} !{freq} !{simulation_model} !{min_seq} !{alpha} !{correction}
+    convergent_substitutions_pvalue.py !{positions} !{root} !{rate} !{align} !{ref_matrix} !{substitutions} !{nb_simu} !{freq} !{simulation_model} !{min_seq} !{alpha} !{correction}
     '''
 }
 
+
+EmergenceChannel.subscribe{detected, tested ->  tested.copyTo(file("${resdir}").resolve('tested_results.tsv')); detected.copyTo(file("${resdir}").resolve('significant_results.tsv'));}
+
+///////////END OF EMERGENCE PART OF WORKFLOW : EXPECTED NB OF EEMS. 
+
 process prepare_BT {
-    conda '/pasteur/appa/homes/mamorel/miniconda3/envs/jupyter-notebook'
+    //conda '/pasteur/appa/homes/mamorel/miniconda3/envs/jupyter-notebook'
     publishDir "${resdir}", mode: 'copy'
-    //label 'python'
+    label 'python'
     input:
     file align
-    tuple file(detected), file(tested) from BayesChannel
+    file positions from Positions_correlation
     file phenotype 
     val correlation
 
     output: 
     file "*binary_tested_sites.tsv" into BinaryTraits, BinaryBayes
+
+    when : branches == "correlation" || branches == 'condor'
+    //when: branches_corr == 'true' //("correlation" || "condor")
+
     shell:
+    '''
+    bayes_traits_preps.py !{align} !{positions} !{phenotype}
+    '''
+}
+
+/*
     if ( correlation == "all" )
     '''
     bayes_traits_preps.py !{align} !{tested} !{phenotype}
@@ -394,7 +438,7 @@ process prepare_BT {
     '''
     else
     error "Invalid bayesTraits mode: ${correlation}"
-}
+*/
 
 process prepare_tree {
     label 'gotree'
@@ -402,6 +446,11 @@ process prepare_tree {
     file tree from BayestreeChannel 
     output:
     file "root_tree.nx" into NexusTree
+
+    when : branches == "correlation" || branches == 'condor'
+    
+    //when: branches_corr == 'true' //("correlation" || "condor")
+
     shell:
     '''
     gotree stats tips -i !{tree} | cut -f 4 | tail -n+2 > names.treefile.txt
@@ -428,11 +477,11 @@ process DataTraits {
     '''
 }
 
-BayesTraits
-    .map{it -> [it.getBaseName().split('_')[1] , it]}
-    .map{it -> [Integer.parseInt(it[0])%50, it[1] ]}
-    .groupTuple()
-    .set{ SplittedBayesTraits }
+// BayesTraits
+//     .map{it -> [it.getBaseName().split('_')[1] , it]}
+//     .map{it -> [Integer.parseInt(it[0])%50, it[1] ]}
+//     .groupTuple()
+//     .set{ SplittedBayesTraits }
 
 //could be replaced by maxForks 50   
 
@@ -440,8 +489,11 @@ process BayesTraits {
     errorStrategy 'retry'
     maxRetries 3
     memory "5G" 
+    maxForks 50
     input: 
-    tuple val(id), file(data_list) from SplittedBayesTraits
+    file(data) from BayesTraits
+    file nx_tree from NexusTree
+    //tuple val(id), file(data_list) from SplittedBayesTraits
     file nx_tree from NexusTree
     output:
     file ("*Stones*") into Stones mode flatten
@@ -465,7 +517,7 @@ process BayesFactor {
     file nx_tree from NexusTree
     file binary from BinaryBayes
     output:
-    tuple file(binary), file ("BayesFactor.txt") into CorrelationChannel
+    tuple file(binary), file ("BayesFactor.txt") into CorrelationChannel, BayesChannel
     shell:
     '''
     END=`awk -F '\t' '{print NF}' !{binary} | sort -nu | tail -n 1`
@@ -482,6 +534,27 @@ process BayesFactor {
     '''
 }
 
+process Conclude_BayesTraits {
+    input: 
+    val bayes
+    tuple file(binary), file(bayesfactor) from BayesChannel
+    output: 
+    tuple file("detected_results.tsv"), file("tested_results.tsv") into Subscribe_BayesTraits
+    
+    when : branches == "correlation"     
+    
+    //when branches_corr == "true" && branches_eem == "false"  //"correlation"
+    shell: 
+    '''
+    bayes_traits_filter.py !{bayesfactor} !{binary} !{bayes}
+    '''
+
+}
+
+Subscribe_BayesTraits.subscribe{detected, tested ->  tested.copyTo(file("${resdir}").resolve('tested_results.tsv')); detected.copyTo(file("${resdir}").resolve('significant_results.tsv'));}
+
+///////////END OF CORRELATION PART OF WORKFLOW. 
+
 process Correlation {
     label 'python'
     publishDir "${resdir}", mode: 'copy'
@@ -490,10 +563,9 @@ process Correlation {
     tuple file (binary), file (bayesfactor) from CorrelationChannel
     tuple file (detected), file(tested) from MergeChannel
     output:
-    tuple file ("BayesFactor.txt"), file("condor_tested_results.tsv"), file("condor_detected_results.tsv")
-    script:
+    tuple file ("BayesFactor.txt"), file("tested_results.tsv"), file("significant_results.tsv")
+    shell:
     '''
     merge_results.py !{bayesfactor} !{binary} !{bayes} !{tested}
     '''
-    
 }
