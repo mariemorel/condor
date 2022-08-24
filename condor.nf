@@ -154,8 +154,7 @@ phenotype = file(params.phenotype)
 correction = params.correction
 alpha = params.alpha //risk 0.1 0.05
 bayes = params.bayes //limit log Bayes Factor 2 20
-
-//branches = params.branches
+branches = params.branches
 //branches_corr = params.branches_corr
 //branches_eem = params.branches_eem
 
@@ -552,7 +551,6 @@ process BayesTraits {
     file ("*Stones*") into Stones mode flatten
     shell:
     '''
-    for data in `ls data*.txt` ; do 
     y=`echo $data` 
     x=${y//[!0-9]/} 
     echo -e  "3\n2\nPriorAll uniform 0 100\nStones 100 1000\nLogFile Dependent_MCMC_10_${x}\nRun" > cmd_MCMC$x.txt;
