@@ -382,7 +382,7 @@ process pre_count{
 
     output : 
     tuple file(positions), file(rate), file(tree), file("*pastml_acr.fasta") into python_count
-    file "reconstructed_root" into Root_seq
+    file "reconstructed_root.txt" into Root_seq
     file "*marginal_posterior.txt" into Marginal_root
 
     shell:
