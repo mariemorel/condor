@@ -1,4 +1,4 @@
-
+nextflow.enable.dsl=1
 path_file = "/pasteur/zeus/projets/p01/Evolbioinfo/users/mamorel/Projet_Convergence/Data/"
 
 /*
@@ -42,6 +42,7 @@ params.phenotype = path_file+"args/processed/rhodopsin/id_phenotype_marine.txt" 
 */
 
 //declaration of parameters
+params.help=false
 params.resdir=path_file+"results/c3c4_phenotype/JTT+R3_noc3c4pheno/" //do not forget to change the resdir
 params.model = "JTT+R3" // best: will choose the best model, other wise will take the given model
 params.matrices = "$baseDir/assets/protein_model.txt"
@@ -59,6 +60,85 @@ params.correction = 'holm' // holm bonferroni correction , could be fdr_bh for b
 params.alpha = 0.1 //limit threshold (included)
 params.bayes = 2
 
+params.align="null"
+params.tree="null"
+params.outgroup="null"
+params.phenotype="null"
+
+def usage(){
+    help="""CONDOR Usage:
+    nextflow run condor.nf --align <input alignment (FASTA)> \\
+                           --tree <input tree (NEWICK)> \\
+                           --outgroup <outgroup file, one tip per line> \\
+                           --phenotype <input tip phenotype data file, only with branches==(condor or correlation)> \\
+                           --resdir <output directory> \\
+                           --model <model or 'best'> \\
+                           --matrices <directory where matrices are stored, default '$baseDir/assets/protein_model.txt'> \\
+                           --nb_simu <number of simulations, default:10000> \\
+                           --min_seq <min number of sequences having the mutation for convergence detection> \\
+                           --min_eem <min number of EEMs> \\
+                           --freqmode <amino acid frequencies: Fmodel or FO, default: Fmodel> \\
+                           --branches <workflow run mode: condor, correlation or emergence, default: correlation> \\
+                           --correction <multiple test correction, holm or fdr_bh, default: holm> \\
+                           --alpha <alpha cutoff, default 0.1> \\
+                           --bayes <log bayes factor threshold, default 2>
+    """
+    log.info(help.stripMargin())
+}
+
+if (params.help){
+    usage()
+    exit(0);
+}
+
+if (params.align==null || params.align == '' || !file(params.align).exists()){
+    log.error("Error: Alignment file not defined or does not exist")
+    usage()
+    exit(1)
+}
+if (params.tree==null || params.tree == '' || !file(params.tree).exists()){
+    log.error("Error: Tree file not defined or does not exist")
+    usage()
+    exit(1)
+}
+
+if (params.outgroup==null || params.outgroup == '' || !file(params.outgroup).exists()){
+    log.error("Error: outgroup file not defined or does not exist")
+    usage()
+    exit(1)
+}
+
+if (params.matrices==null || params.matrices == '' || !file(params.matrices).exists()){
+    log.error("Error: matrice file not defined or does not exist")
+    usage()
+    exit(1)
+}
+
+if (params.nb_simu <= 0){
+    log.error("Error: number of simulations must be > 0")
+    usage()
+    exit(1)
+}
+
+if (!['Fmodel','FO'].contains(params.freqmode)){
+    log.error("Error: wrong amino acid frequncy mode")
+    usage()
+    exit(1)
+}
+
+if (!["condor","correlation","emergence"].contains(params.branches)){
+    log.error("Error: --branches must specify a valid run mode : condor, correlation, or emergence")
+    usage()
+    exit(1)
+}
+
+if (['condor','correlation'].contains(params.branches) && (params.phenotype==null || params.phenotype == '' || !file(params.phenotype).exists())){
+    log.error("Error: phenotype file must be defined and must exist when --branches is condor or correlation")
+    usage()
+    exit(1)
+}
+
+
 //creation of parameters
 align = file(params.align)
 tree = file(params.tree)
@@ -73,13 +153,12 @@ freqmode = params.freqmode
 //////////// Optional parameters
 phenotype = file(params.phenotype)
 correction = params.correction
-correlation = params.correlation //choose between holm bonferroni and B-Hochberg
 alpha = params.alpha //risk 0.1 0.05
 bayes = params.bayes //limit log Bayes Factor 2 20
 
 //branches = params.branches
-branches_corr = params.branches_corr
-branches_eem = params.branches_eem
+//branches_corr = params.branches_corr
+//branches_eem = params.branches_eem
 
 // create result directory
 resdir=file(params.resdir)
@@ -100,8 +179,8 @@ process find_model {
     if ( model == 'best' )
     // modelfinder on user input tree and alignment
     '''
-    iqtree -m MFP -s !{align} -te !{tree} -nt !{task.cpus}
-    grep "Best-fit model" !{align}.iqtree | cut -d " " -f 6 > best_fit_model.txt
+    iqtree -m MFP -s !{align} -te !{tree} -nt !{task.cpus} -pre mfp_!{align}
+    grep "Best-fit model" mfp_!{align}.iqtree | cut -d " " -f 6 > best_fit_model.txt
     '''
     else
     '''
@@ -173,9 +252,10 @@ process reoptimize_tree {
     file align
     file tree
     file iqtree_mode from ModelChannel
+    file matrices
     tuple val(length), val(nb_seq) from Stats_align
     output:
-    file "*.treefile" into TreeChannel 
+    file "align.treefile" into TreeChannel 
     tuple val(length), file(align), file ("reestimated_rate"), file("frequencies.txt") into RatesparamsChannel
     file "reestimated_rate" into  RatesChannel
     file "frequencies.txt" into FreqChannel, FrequenciesChannel
@@ -191,7 +271,7 @@ process reoptimize_tree {
     len=`wc -l reestimated_rate | cut -d " " -f 1`
     if [ "$len" -eq "0" ] ; then for i in {1..!{length}} ; do echo 1 >> reestimated_rate ;done ;  fi
     model=`awk 'BEGIN { FS="+" } {printf $1}' !{iqtree_mode}`
-    freqs=`grep -i $model -A 20 protein_model.txt | tail -n 1 | sed 's/;//'` 
+    freqs=`grep -i $model -A 20 !{matrices} | tail -n 1 | sed 's/;//'`
     AA="A R N D C Q E G H I L K M F P S T W Y V"
     paste <(tr ' ' '\n' <<< ${AA[*]}) <(tr ' ' '\n' <<< ${freqs[*]}) >  frequencies.txt
     '''
@@ -225,8 +305,8 @@ process tree_rename{
     //remove outgroup ofter rerooting
     //give a name to internal nodes
     ''' 
-    sed -i  '/);/!s/)[0-9]*.[0-9]*;/);/' !{tree}
-    gotree reroot outgroup -r -i !{tree} -l !{outgroup} -o rooted_!{tree}
+    sed  '/);/!s/)[0-9]*.[0-9]*;/);/' !{tree} > !{tree}_tmp
+    gotree reroot outgroup -r -i !{tree}_tmp -l !{outgroup} -o rooted_!{tree}
     gotree rename --internal --tips=false --auto -i rooted_!{tree} -o named_tree
     '''
 }
@@ -302,7 +382,7 @@ process pre_count{
 
     output : 
     tuple file(positions), file(rate), file(tree), file("*pastml_acr.fasta") into python_count
-    file "reconstructed_root" into Root_seq
+    file "reconstructed_root.txt" into Root_seq
     file "*marginal_posterior.txt" into Marginal_root
 
     shell:
@@ -327,7 +407,7 @@ process count_apparitions{
     //count EEMs from real data acr
     //min eem is strict >
     '''
-    count_substitutions_from_tips.py !{align} !{tree} !{positions} !{min_eem} 
+    count_substitutions_from_tips.py !{align} !{tree} !{positions} !{min_eem}
     '''
 }
 
@@ -413,7 +493,6 @@ process prepare_BT {
     file align
     file positions from Positions_correlation
     file phenotype 
-    val correlation
 
     output: 
     file "*binary_tested_sites.tsv" into BinaryTraits, BinaryBayes
