@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser(description="BayesTraits script")
 parser.add_argument("tips_file", help="path towards fasta alignment", type=str)
 
 parser.add_argument(
-    "all_results", help="path towards all_results_metrics.tsv", type=str
+    "pos_mut", help="path towards positions and mutations to test", type=str
 )
 
 parser.add_argument(
@@ -23,26 +23,24 @@ parser.add_argument(
     type=str,
 )
 
-
 args = parser.parse_args()
 
 tips_file = args.tips_file
-all_mutations = args.all_results
+positions = args.pos_mut
 pheno_file = args.pheno_file
 
 
-path_name = os.path.dirname(os.path.abspath(all_mutations))
+path_name = os.path.dirname(os.path.abspath(positions))
 
 Align_tips = AlignIO.read(open(tips_file), "fasta")
 Tips_df = pd.DataFrame(
     [list(rec.seq) for rec in Align_tips], index=[rec.id for rec in Align_tips]
 )
-all_mutations_df = pd.read_csv(all_mutations, sep="\t")
 
-pos_mut = [
-    "".join([str(i), j])
-    for i, j in zip(all_mutations_df.position, all_mutations_df.mut)
-]
+pos_mut = []
+with open(positions) as f:
+    for line in f:
+        pos_mut.append(line.strip())
 
 binary_df = pd.DataFrame(index=Tips_df.index, columns=[i for i in pos_mut])
 for i in pos_mut:
