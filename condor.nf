@@ -252,6 +252,7 @@ process reoptimize_tree {
     file align
     file tree
     file iqtree_mode from ModelChannel
+    file matrices
     tuple val(length), val(nb_seq) from Stats_align
     output:
     file "*.treefile" into TreeChannel 
@@ -270,7 +271,7 @@ process reoptimize_tree {
     len=`wc -l reestimated_rate | cut -d " " -f 1`
     if [ "$len" -eq "0" ] ; then for i in {1..!{length}} ; do echo 1 >> reestimated_rate ;done ;  fi
     model=`awk 'BEGIN { FS="+" } {printf $1}' !{iqtree_mode}`
-    freqs=`grep -i $model -A 20 protein_model.txt | tail -n 1 | sed 's/;//'` 
+    freqs=`grep -i $model -A 20 !{matrices} | tail -n 1 | sed 's/;//'`
     AA="A R N D C Q E G H I L K M F P S T W Y V"
     paste <(tr ' ' '\n' <<< ${AA[*]}) <(tr ' ' '\n' <<< ${freqs[*]}) >  frequencies.txt
     '''
