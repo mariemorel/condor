@@ -16,6 +16,8 @@ parser.add_argument(
 parser.add_argument("tree_file", help="rooted tree with names internal nodes")
 parser.add_argument("positions", help="positions to test") #1250 for synthetic 347 ror HIV real
 
+parser.add_argument("min_eem", help = "minimum emergence-events to test the position")
+
 args = parser.parse_args()
 
 t = PhyloTree(args.tree_file, format=1)
@@ -23,10 +25,10 @@ t.link_to_alignment(args.alignment_file, alg_format="fasta")
 
 align_Name = args.alignment_file.split(".")[0]
 
-
 alignment = AlignIO.read(args.alignment_file, "fasta")
 residues = AlignInfo.SummaryInfo(alignment)._get_all_letters()
 
+eem = int(args.min_eem)
 
 Pos_list = []
 with open(args.positions) as f:
@@ -79,7 +81,28 @@ class Count_apparitions:
 
 results = Count_apparitions().apparitions_leaves(t)
 
-pd.DataFrame(results[0]).to_csv(
+
+df = pd.DataFrame(results[0])
+
+DF = pd.DataFrame(df.describe().loc['max'] > eem )
+pos_to_test = DF[DF[max]].index.to_list()
+
+A = []
+for i in df.columns:
+    if df[i].describe().loc['max'] > eem :
+        A.append(["".join([str(i),j]) for j in df[df[i] > eem].index.values])
+
+
+with open("pos_mut_to_test_eem.txt", "w") as wf:
+    for i in A:
+        for j in i: 
+            wf.write("".join(str(j))+"\n")
+
+
+with open("positions_to_test_eem.txt", "w") as wf:
+    wf.write("\n".join(list(map(str, pos_to_test))))
+
+df.to_csv(
     "".join([align_Name, "substitutions_even_root.tsv"]), sep="\t", encoding="utf-8"
 ) ##numerotation from 1
 

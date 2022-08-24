@@ -35,6 +35,10 @@ bayes_df = pd.read_csv(
 )
 bayes_df.drop(["x1", "x2"], axis=1, inplace=True)
 
+cols = ["posmut", "log-dep", "log-indep", "BF"]
+
+bayes_df = bayes_df[cols] 
+
 treated = Counter(binary_df.phenotype)[1]
 non_treated = Counter(binary_df.phenotype)[0]
 
@@ -57,11 +61,11 @@ tested_df["posmut"] = [
 
 All_bayes = pd.merge(tested_df, bayes_df, on="posmut", how="left")
 ConDor_detected = All_bayes[
-    (All_bayes.detected == "PASS")
+    (All_bayes.detected_EEM == "PASS")
     & (All_bayes.BF > lim_log)
     & (All_bayes.correlation == "positive")
 ]
 
-All_bayes.to_csv("condor_tested_results.tsv", sep="\t", index=None)
-ConDor_detected.to_csv("condor_detected_results.tsv", sep="\t", index=None)
+All_bayes.to_csv("tested_results.tsv", sep="\t", index=None)
+ConDor_detected.to_csv("significant_results.tsv", sep="\t", index=None)
 
