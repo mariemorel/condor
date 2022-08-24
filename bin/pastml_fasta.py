@@ -49,13 +49,11 @@ AA = list("ARNDCQEGHILKMFPSTWYV")
 root_dict = {}
 for a,pos in enumerate(characters): 
     root= []
-
     probs = []
     for proba in marginal_list[a]:
         probs.append(nb_simu*float(proba))
     for i, count in enumerate(saferound(probs,0)):
         root.extend( int(count) * [AA[i]])
-
     root_dict[pos] = root
 
 ##dictionary of each pos with a vector of amino acids corresponding at the root amino acids mutliplied by the marginal proba * nb simulations
@@ -77,12 +75,13 @@ for n in set(B.index):
 #retrieve reconstructed root
 
 SeqIO.write(record, output+"pastml_acr.fasta", "fasta")
-with open("reconstructed_root", "w") as wf:
-    wf.write(reconstructed_root)
+with open("reconstructed_root.txt", "w") as wf:
+    for i,j in zip(Pos_list, reconstructed_root):
+        wf.write("\t".join([str(i),j])+"\n")
 
 
 with open(output+"marginal_posterior.txt", "w") as wf:
     for i in root_dict:
-        wf.write("\t".join([i, "".join(root_dict[i])])+"\n")
+        wf.write("\t".join([i, "".join(root_dict[i])])+"\n") #num starts at 0
 
 

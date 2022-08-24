@@ -46,7 +46,7 @@ parser.add_argument(
 )
 
 args = parser.parse_args()
-root_seq = list(args.root)
+root_df = args.root
 alignment_file = args.align
 ref_counting = args.ref_matrix
 nb_simu = int(args.nb_simu)
@@ -69,6 +69,11 @@ with open(args.freq) as f:
     for line in f:
         frequencies.append(float(line.split("\t")[1].strip()))
 
+
+root_seq = []
+root_DF = pd.read_csv(root_df, sep="\t", header=None, names = ["pos", "root"])
+for p in list_pos : 
+    root_seq.append(root_DF[root_DF.pos == p].root.values[0])
 
 S_df = pd.read_csv(args.matrix_model, sep="\t", index_col=0)
 # PI = np.array([0.060490222, 0.066039665, 0.044127815, 0.042109048, 0.020075899, 0.053606488,
@@ -116,6 +121,9 @@ rate = [float(line.strip()) for line in open(args.rates)]
 subset_rate = [rate[pos-1] for pos in list_pos]
 
 substitutions_ref_df = pd.read_csv(ref_counting, sep="\t", index_col=0)
+substitutions_ref_eem_df = substitutions_ref_df[[str(i) for i in list_pos]]
+
+
 ref_df = np.array(substitutions_ref_df.reindex(AA))
 
 Substitutions_list_df = pd.read_csv(args.substitutions, sep="\t")
@@ -165,13 +173,13 @@ pvalues = []
 all_results = []
 
 def compute_pvalue(posnumber, position):
-    anc = root_seq[posnumber]
-    cons_aa = consensus[position-1]
-    rate_pos = rate[position-1]
+    anc = root_seq[posnumber] #min seq + eem
+    cons_aa = consensus[position-1] #no filter on positions
+    rate_pos = rate[position-1] #no filter on positions
     counts_simu = glob.glob("".join(["count_", str(position), "_named_tree_*.npz"]))[0] 
     load_csr = sparse.load_npz(counts_simu)
     dense = np.array(load_csr.todense()) 
-    align_count = Counter(align_df[position-1])
+    align_count = Counter(align_df[position-1]) # no filter on positions
     for aa, nb_seq in align_count.items():
         if (nb_seq >= minseq) and (aa in AA):
             aa_index = AA.index(aa)
@@ -193,16 +201,16 @@ all_tests = pd.DataFrame(
     all_results,
     columns=[
         "pastml_root",
-        "consensus",
+        "consensus_root",
         "position",
         "mut",
-        "ref_emerge",
+        "ref_EEM",
         "nbseq",
         "max_simu",
-        "pvalue",
+        "pvalue_raw",
         "variance",
         "mean",
-        "rate"
+        "evol_rate"
     ],
 )
 
@@ -244,12 +252,12 @@ for acr, pos, mut in zip(all_tests.pastml_root,all_tests.position, all_tests.mut
 
 
 all_tests["max_anc"] = max_anc
-all_tests["Typesubstitution"] = Type
+all_tests["type_substitution"] = Type
 all_tests["details"] = details
 all_tests["loss"] = Reversion_nb
 all_tests["loss_details"] = Rev_details
 all_tests["genetic_distance"] = genetic_distance
-all_tests["substitution rate"] = exchangeability
+all_tests["substitution_rate"] = exchangeability
 all_tests["findability"] = findability
 
 
@@ -260,24 +268,68 @@ all_tests["findability"] = findability
 
 
 
-pvals_holm = sm.stats.multitest.multipletests(all_tests.pvalue, alpha=risk, method="holm", is_sorted=False, returnsorted=False)
-pvals_fdr = sm.stats.multitest.multipletests(all_tests.pvalue, alpha=risk, method="fdr_bh", is_sorted=False, returnsorted=False)
-
+pvals_holm = sm.stats.multitest.multipletests(all_tests.pvalue_raw, alpha=risk, method="holm", is_sorted=False, returnsorted=False)
+pvals_fdr = sm.stats.multitest.multipletests(all_tests.pvalue_raw, alpha=risk, method="fdr_bh", is_sorted=False, returnsorted=False)
 
 
 if test_type == "holm":
     all_tests["adjust_pvalue"] = list(pvals_holm[1])
     all_tests["adjust_pvalue_fdr"] = list(pvals_fdr[1])
-    all_tests["detected"] = ["PASS" if i else "NOT PASS" for i in pvals_holm[0]]
+    all_tests["detected_EEM"] = ["PASS" if i else "NOT PASS" for i in pvals_holm[0]]
+    cols = ["pastml_root",
+            "consensus_root",
+            "position",
+            "mut",
+            "max_anc", 
+            "ref_EEM",
+            "nbseq",
+            "evol_rate",
+            "genetic_distance",
+            "substitution_rate",
+            "findability",
+            "type_substitution",
+            "details",
+            "loss",
+            "loss_details",
+            "max_simu",
+            "variance",
+            "mean",
+            "pvalue_raw",
+            "adjust_pvalue",
+            "adjust_pvalue_fdr",
+            "detected_EEM"]
+    all_tests = all_tests[cols]
 
 else:
     all_tests["adjust_pvalue"] = list(pvals_fdr[1])
     all_tests["adjust_pvalue_holm"] = list(pvals_holm[1])
-    all_tests["detected"] = ["PASS" if i else "NOT PASS" for i in pvals_fdr[0]]
+    all_tests["detected_EEM"] = ["PASS" if i else "NOT PASS" for i in pvals_fdr[0]]
+    cols = ["pastml_root",
+        "consensus_root",
+        "position",
+        "mut",
+        "max_anc", 
+        "ref_EEM",
+        "nbseq",
+        "evol_rate",
+        "genetic_distance",
+        "substitution_rate",
+        "findability",
+        "type_substitution",
+        "details",
+        "loss",
+        "loss_details",
+        "max_simu",
+        "variance",
+        "mean",
+        "pvalue_raw",
+        "adjust_pvalue",
+        "adjust_pvalue_holm",
+        "detected_EEM"]
+    all_tests = all_tests[cols]
+
      
-all_tests.sort_values('pvalue', inplace=True)
+all_tests.sort_values('pvalue_raw', inplace=True)
 all_tests.to_csv("all_results_metrics.tsv", sep="\t", index=False)
-detected = all_tests[all_tests["detected"] == "PASS"]
+detected = all_tests[all_tests["detected_EEM"] == "PASS"]
 detected.to_csv("detected_metrics.tsv", sep="\t", index=False)
-
-
