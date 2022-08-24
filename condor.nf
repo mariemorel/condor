@@ -78,8 +78,8 @@ def usage(){
                            --min_seq <min number of sequences having the mutation for convergence detection> \\
                            --min_eem <min number of EEMs> \\
                            --freqmode <amino acid frequencies: Fmodel or FO, default: Fmodel> \\
-                           --branches <workflow run mode: condor, correlation or emergence, default: correlation> \\
-                           --correction <multiple test correction, holm or fdr_bh, default: holm> \\
+                           --branches <workflow run mode: condor, correlation or emergence, default: condor> \\
+                           --correction <multiple test correction, holm (holm bonferroni) or fdr_bh, default: holm> \\
                            --alpha <alpha cutoff, default 0.1> \\
                            --bayes <log bayes factor threshold, default 2>
     """
@@ -342,12 +342,12 @@ process acr_pastml{
     output:
     tuple val(length),file(positions), file(rate), file("work_pastml/named.*nwk"), file("*pastml.ML.out.gz"), file("marginal_root.txt") into pastml_ML_out
     
-     //rate sed numerotation from 1 ($line -1)
+    //rate sed numerotation from 1 ($line -1)
     //input numerotation from 0
     //create parameter file for pastml including rate per site (scaling factor) for each site and frequencies of amino acids
     //run pastml 
     //remove some temp files
-    //retrive marginal proba for root (sed -n 2p)
+    //retrieve marginal proba for root (sed -n 2p)
 
     shell:
     '''
@@ -506,18 +506,6 @@ process prepare_BT {
     '''
 }
 
-/*
-    if ( correlation == "all" )
-    '''
-    bayes_traits_preps.py !{align} !{tested} !{phenotype}
-    '''
-    else if ( correlation == "detected" )
-    '''
-    bayes_traits_preps.py !{align} !{detected} !{phenotype}
-    '''
-    else
-    error "Invalid bayesTraits mode: ${correlation}"
-*/
 
 process prepare_tree {
     label 'gotree'
@@ -555,14 +543,6 @@ process DataTraits {
     for (( i=2; i<=$((${END}-1)); i++ )); do cut -f 1,$i,$END !{binary} | tail -n+2 > data_$i.txt ; done
     '''
 }
-
-// BayesTraits
-//     .map{it -> [it.getBaseName().split('_')[1] , it]}
-//     .map{it -> [Integer.parseInt(it[0])%50, it[1] ]}
-//     .groupTuple()
-//     .set{ SplittedBayesTraits }
-
-//could be replaced by maxForks 50   
 
 process BayesTraits {
     errorStrategy 'retry'
