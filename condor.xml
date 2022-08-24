@@ -1,5 +1,5 @@
-<tool id="condor" name="condor" version="0.1">
-  <description>Condor: A workflow to detect convergent evolution</description>
+<tool id="condor" name="condor" version="0.2">
+  <description>ConDor: A workflow to detect convergent evolution</description>
   <requirements>
     <requirement type="package" version="1.8.0">java</requirement>
     <requirement type="package">singularity</requirement>
@@ -32,7 +32,7 @@
     <param name="tree" format="nhx" type="data" label="Tree file" help="Newick format"/>
     <param name="outgroup" format="txt" type="data" label="Outgroup file" help="Txt format, one taxon per line"/>
     <param name="phenotype" format="txt" type="data" label="Phenotype file" help="Txt format, taxon with convergent phenotype, one taxon per line"/>
-    <param name="model" type="select" label="Evolutionary model to use">
+    <param name="model" type="select" label="Evolutionary model">
       <option value="best" selected="true">Best (IQ-TREE Model finder)</option>
       <option value="POISSON" selected="false">POISSON</option>
       <option value="DAYHOFF" selected="false">DAYHOFF</option>
@@ -120,8 +120,8 @@
     </param>
   </inputs>
   <outputs>
-    <data name="all_metrics" format="txt" label="All results metrics" from_work_dir="results/all_results_metrics.tsv" />
-    <data name="detected_metrics" format="txt" label="Detected metrics" from_work_dir="results/detected_metrics.tsv" />
+    <data name="tested_results" format="tsv" label="Tested metrics" from_work_dir="results/tested_results.tsv" />
+    <data name="significant_results" format="tsv" label="Detected metrics" from_work_dir="results/significant_results.tsv" />
   </outputs>
   <help>
   </help>
