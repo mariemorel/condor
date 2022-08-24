@@ -55,7 +55,6 @@ params.freqmode = "Fmodel" //Fmodel, if something else: FO. Need to be changed t
 params.branches = "correlation" // condor, correlation, emergence. 
 //params.branches_eem = "true"
 //params.branches_corr = "true"
-params.correlation = "all" //detected
 params.correction = 'holm' // holm bonferroni correction , could be fdr_bh for benjamini hochberg
 params.alpha = 0.1 //limit threshold (included)
 params.bayes = 2
@@ -545,14 +544,9 @@ process DataTraits {
 }
 
 process BayesTraits {
-    errorStrategy 'retry'
-    maxRetries 3
-    memory "5G" 
-    maxForks 50
+    label 'bayestraits'
     input: 
     file(data) from BayesTraits
-    file nx_tree from NexusTree
-    //tuple val(id), file(data_list) from SplittedBayesTraits
     file nx_tree from NexusTree
     output:
     file ("*Stones*") into Stones mode flatten
