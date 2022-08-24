@@ -179,8 +179,8 @@ process find_model {
     if ( model == 'best' )
     // modelfinder on user input tree and alignment
     '''
-    iqtree -m MFP -s !{align} -te !{tree} -nt !{task.cpus}
-    grep "Best-fit model" !{align}.iqtree | cut -d " " -f 6 > best_fit_model.txt
+    iqtree -m MFP -s !{align} -te !{tree} -nt !{task.cpus} -pre mfp_!{align}
+    grep "Best-fit model" mfp_!{align}.iqtree | cut -d " " -f 6 > best_fit_model.txt
     '''
     else
     '''
@@ -255,7 +255,7 @@ process reoptimize_tree {
     file matrices
     tuple val(length), val(nb_seq) from Stats_align
     output:
-    file "*.treefile" into TreeChannel 
+    file "align.treefile" into TreeChannel 
     tuple val(length), file(align), file ("reestimated_rate"), file("frequencies.txt") into RatesparamsChannel
     file "reestimated_rate" into  RatesChannel
     file "frequencies.txt" into FreqChannel, FrequenciesChannel
@@ -305,8 +305,8 @@ process tree_rename{
     //remove outgroup ofter rerooting
     //give a name to internal nodes
     ''' 
-    sed -i  '/);/!s/)[0-9]*.[0-9]*;/);/' !{tree}
-    gotree reroot outgroup -r -i !{tree} -l !{outgroup} -o rooted_!{tree}
+    sed  '/);/!s/)[0-9]*.[0-9]*;/);/' !{tree} > !{tree}_tmp
+    gotree reroot outgroup -r -i !{tree}_tmp -l !{outgroup} -o rooted_!{tree}
     gotree rename --internal --tips=false --auto -i rooted_!{tree} -o named_tree
     '''
 }
@@ -407,7 +407,7 @@ process count_apparitions{
     //count EEMs from real data acr
     //min eem is strict >
     '''
-    count_substitutions_from_tips.py !{align} !{tree} !{positions} !{min_eem} 
+    count_substitutions_from_tips.py !{align} !{tree} !{positions} !{min_eem}
     '''
 }
 
