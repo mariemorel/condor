@@ -43,7 +43,7 @@ params.phenotype = path_file+"args/processed/rhodopsin/id_phenotype_marine.txt" 
 
 //declaration of parameters
 params.help=false
-params.resdir=path_file+"results/c3c4_phenotype/JTT+R3_noc3c4pheno/" //do not forget to change the resdir
+params.resdir=path_file+"results/c3c4_phenotype/JTT+R3/" //do not forget to change the resdir
 params.model = "JTT+R3" // best: will choose the best model, other wise will take the given model
 params.matrices = "$baseDir/assets/protein_model.txt"
 params.nb_simu = 10000 //number of simulations to perform
