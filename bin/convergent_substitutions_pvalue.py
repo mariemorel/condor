@@ -124,7 +124,7 @@ substitutions_ref_df = pd.read_csv(ref_counting, sep="\t", index_col=0)
 substitutions_ref_eem_df = substitutions_ref_df[[str(i) for i in list_pos]]
 
 
-ref_df = np.array(substitutions_ref_df.reindex(AA))
+ref_df = np.array(substitutions_ref_eem_df.reindex(AA))
 
 Substitutions_list_df = pd.read_csv(args.substitutions, sep="\t")
 Substitutions_list_df.columns = ["position", "anc", "mut", "nb"]
