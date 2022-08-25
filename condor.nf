@@ -474,7 +474,7 @@ process conclude_convergence{
 
     shell:
     '''
-    convergent_substitutions_pvalue.py !{positions} !{root} !{rate} !{align} !{ref_matrix} !{substitutions} !{nb_simu} !{freq} !{simulation_model} !{min_seq} !{alpha} !{correction}
+    convergent_substitutions_pvalue.py !{positions} !{root} !{rate} !{align} !{ref_matrix} !{substitutions} !{nb_simu} !{freq} !{simulation_model} !{min_seq} !{min_eem} !{alpha} !{correction}
     '''
 }
 
@@ -551,12 +551,12 @@ process BayesTraits {
     file ("*Stones*") into Stones mode flatten
     shell:
     '''
-    y=`echo $data` 
+    y=`echo !{data}` 
     x=${y//[!0-9]/} 
     echo -e  "3\n2\nPriorAll uniform 0 100\nStones 100 1000\nLogFile Dependent_MCMC_10_${x}\nRun" > cmd_MCMC$x.txt;
-    BayesTraitsV3 !{nx_tree} $data < cmd_MCMC$x.txt; 
+    BayesTraitsV3 !{nx_tree} !{data} < cmd_MCMC$x.txt; 
     echo -e  "2\n2\nPriorAll uniform 0 100\nStones 100 1000\nLogFile Independent_MCMC_10_${x}\nRun" > cmd_Independent_MCMC$x.txt; 
-    BayesTraitsV3 !{nx_tree} $data < cmd_Independent_MCMC$x.txt; done
+    BayesTraitsV3 !{nx_tree} !{data} < cmd_Independent_MCMC$x.txt; done
     '''
 }
 
