@@ -7,12 +7,29 @@ Welcome to ConDor workflow repository !
 In this repository you can find our ConDor workflow developed to detect convergent evolution in amino acid alignments. 
 ConDor is available from a web service located at https://condor.pasteur.cloud/.
 
-ConDor is adapted to the detection of evolutionary convergence at the resolution of a mutation especially in large datasets (several hundreds of sequences). To run ConDor you will need a multiple sequence alignment in fasta format including outgroup sequences, the corresponding tree in newick (with same sequence names as in the alignment), a file with outgroup sequence names and a file containing a list of sequences with the convergent phenotype (can be optional).
+ConDor is adapted to the detection of evolutionary convergence at the resolution of a mutation especially in large datasets (several hundreds of sequences). 
 
-ConDor is composed of two independent components Emergence and Correlation, which can be launched together or not.
+ConDor pipeline is composed of two independent components: Emergence and Correlation, which can be launched together or not.
 
-The output of ConDor is a list of mutations detected as convergent as they occur more often than expected under neutral evolution (Emergence component) and/or correlate (Correlation component) with the convergent phenotype (or a predictor of the phenotype). 
+# Input Files and Options
+To run ConDor you will need a multiple sequence alignment in fasta format including outgroup sequences, the corresponding tree in newick (with same sequence names as in the alignment), a file with outgroup sequence names and a file containing a list of sequences with the convergent phenotype (can be optional).
 
+**Options**
+- **align**: input alignment (FASTA file)
+- **tree**: input tree (NEWICK file)
+- **outgroup**: outgroup file, one tip per line
+- **phenotype**: input tip phenotype data file, only needed when running Correlation component (or condor)
+- **resdir**: output directory name
+- **model**: evolutionary model to use or 'best' to run ModelFinder
+- **matrices**: where evolutionary model matrices are stored, default '$baseDir/assets/protein_model.txt'
+- **nb_simu**: number of simulations to perform for Emergence component, default:10000
+- **min_seq**: min number of sequences having the mutation for convergence detection
+- **min_eem**: min (strict) number of EEMs, default 2
+- **freqmode**: amino acid frequencies: 'Fmodel' to use frequencies from substitution matrix or 'FO' for ML optimization, default: Fmodel
+- **branches**: run mode: 'condor', 'correlation' or 'emergence', default: condor
+- **correction**: multiple test correction, holm (holm-bonferroni) or fdr_bh (benjamini-hochberg), default: holm
+- **alpha**: risk alpha cutoff, default 0.1
+- **bayes**: log bayes factor threshold for BayesTraits, default 2. Should be increased to 10 or 20 for large datasets
 
 # Usage
 To launch a full analysis (condor = both Emergence and Correlation components) with the test data (sedge dataset) run : 
@@ -30,8 +47,7 @@ Finally, if you want to run only the Correlation component:
 For larger datasets (>1000), we recommand to increase --min_seq 10 and --bayes 20
 
 # Outputs
-
-Two output files (csv) are given by ConDor:
+Two output files (tsv) are given by ConDor:
 
 1. Tested_results.tsv: all mutations tested by ConDor with multiple metrics and statistics. The columns are described below.  
 2. Significant_results.tsv: only mutations which p-value and log Bayes Factor passed the acceptance threshold and are thus considered as convergent.  
