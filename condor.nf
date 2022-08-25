@@ -556,7 +556,7 @@ process BayesTraits {
     echo -e  "3\n2\nPriorAll uniform 0 100\nStones 100 1000\nLogFile Dependent_MCMC_10_${x}\nRun" > cmd_MCMC$x.txt;
     BayesTraitsV3 !{nx_tree} !{data} < cmd_MCMC$x.txt; 
     echo -e  "2\n2\nPriorAll uniform 0 100\nStones 100 1000\nLogFile Independent_MCMC_10_${x}\nRun" > cmd_Independent_MCMC$x.txt; 
-    BayesTraitsV3 !{nx_tree} !{data} < cmd_Independent_MCMC$x.txt; done
+    BayesTraitsV3 !{nx_tree} !{data} < cmd_Independent_MCMC$x.txt;
     '''
 }
 
@@ -568,7 +568,7 @@ process BayesFactor {
     file nx_tree from NexusTree
     file binary from BinaryBayes
     output:
-    tuple file(binary), file ("BayesFactor.txt") into CorrelationChannel, BayesChannel
+    tuple file(binary), file ("BayesFactor_raw.txt") into CorrelationChannel, BayesChannel
     shell:
     '''
     END=`awk -F '\t' '{print NF}' !{binary} | sort -nu | tail -n 1`
@@ -581,7 +581,7 @@ process BayesFactor {
         echo "2*($d- $i)" | bc >> tmp
     done <Dep_Indep_results.txt
     for i in `head -n 1 binary_tested_sites.tsv` ; do echo $i ; done | head -n -1 > names.txt
-    paste Dep_Indep_results.txt tmp names.txt > BayesFactor.txt
+    paste Dep_Indep_results.txt tmp names.txt > BayesFactor_raw.txt
     '''
 }
 
