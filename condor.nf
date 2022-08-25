@@ -590,7 +590,7 @@ process Conclude_BayesTraits {
     val bayes
     tuple file(binary), file(bayesfactor) from BayesChannel
     output: 
-    tuple file("detected_results.tsv"), file("tested_results.tsv") into Subscribe_BayesTraits
+    tuple file("bayes_detected_results.tsv"), file("bayes_tested_results.tsv") into Subscribe_BayesTraits
     
     when : branches == "correlation"     
     

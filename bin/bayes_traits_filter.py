@@ -50,11 +50,11 @@ for pos_mut in binary_df.columns[1:-1]:
         corr.append("equivalent")
 
 bayes_df["correlation"] = corr
-bayes_df.to_csv("tested_results.tsv", sep="\t", index=None)
+bayes_df.to_csv("bayes_tested_results.tsv", sep="\t", index=None)
 
 
 Bayes_detected = bayes_df[(bayes_df.BF > lim_log)
     & (bayes_df.correlation == "positive")
 ]
 
-Bayes_detected.to_csv("detected_results.tsv", sep="\t", index=None)
+Bayes_detected.to_csv("bayes_detected_results.tsv", sep="\t", index=None)
