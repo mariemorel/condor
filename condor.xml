@@ -24,7 +24,13 @@
       --resdir results
       --min_seq ${minconvseqs}
       --min_eem ${mineems}
-      --nb_simu 10000;
+      --nb_simu 10000
+      --matrices $__tool_directory__/assets/protein_model.txt
+      --freqmode Fmodel
+      --branches ${branches}
+      --correction holm
+      --alpha ${alpha}
+      --bayes ${bayes};
     ]]>
   </command>
   <inputs>
@@ -117,6 +123,29 @@
       <option value="16">16</option>
       <option value="18">18</option>
       <option value="20">20</option>
+    </param>
+    <param name="branches" type="select" label="CONDOR run mode">
+      <option value="condor" selected="true">condor</option>
+      <option value="emergence">emergence</option>
+      <option value="correlation">correlation</option>
+    </param>
+    <param name="alpha" type="select" label="P.value emergence">
+      <option value="0.01">0.01</option>
+      <option value="0.015">0.015</option>
+      <option value="0.025">0.025</option>
+      <option value="0.05">0.05</option>
+      <option value="0.1" selected="true">0.1</option>
+      <option value="0.15">0.15</option>
+      <option value="0.2">0.2</option>      
+    </param>
+    <param name="bayes" type="select" label="log BF correlation">
+      <option value="2">2</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="7">7</option>
+      <option value="10" selected="true">10</option>
+      <option value="12">12</option>
+      <option value="15">15</option>
     </param>
   </inputs>
   <outputs>
