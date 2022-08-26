@@ -586,6 +586,7 @@ process BayesFactor {
 }
 
 process Conclude_BayesTraits {
+    label 'python'
     input: 
     val bayes
     tuple file(binary), file(bayesfactor) from BayesChannel
