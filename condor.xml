@@ -26,7 +26,7 @@
       --min_eem ${mineems}
       --nb_simu 10000
       --matrices $__tool_directory__/assets/protein_model.txt
-      --freqmode Fmodel
+      --freqmode ${freqmode}
       --branches ${branches}
       --correction holm
       --alpha ${alpha}
@@ -88,6 +88,10 @@
       <option value="+R6" selected="false">+R6</option>
       <option value="+R8" selected="false">+R8</option>
       <option value="+R10" selected="false">+R10</option>
+    </param>
+    <param name="freqmode" type="select" label="Equilibrium frequencies">
+      <option value="Fmodel" selected="true">Frequencies of the model</option>
+      <option value="FO" selected="false">Frequencies optimized by maximum likelihood</option>
     </param>
     <param name="minconvseqs" type="select" label="Minimum number of convergent sequences (>=)">
       <option value="2">2</option>
