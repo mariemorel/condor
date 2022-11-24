@@ -1,0 +1,6 @@
+.nextflow*
+work*
+*.out*
+*.log*
+*report*
+*html*
