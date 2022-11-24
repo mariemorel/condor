@@ -70,7 +70,7 @@ It consists of 79 sequences of the PEPC protein in sedges (plant species at C3/C
 - **genetic_distance**: Minimal number of DNA substitutions in the codon to switch between the two amino acids. 
 - **substitution rate**: Value that indicates how exchangeable two amino acids are. If they can switch very easily (high substitution rate), we expect a lot of EEMs in the simulations, and then, the mutation is difficult to detect even if it is truly convergent. The substitution rate is given by the matrix of the substitution model (e.g. HIVb and MtZoa in the paper).
 - **findability**: Inverse of the substitution rate. 
-- **type_substitution**: Category of the mutation: convergent (issued from several ancestral amino acids), parallel (always issued from the same ancestral amino acid) or revertant (go back to the root amino acid). 
+- **type_substitution**: Category of the mutation: convergent (issued from several ancestral amino acids), parallel (always issued from the same ancestral amino acid) and revertant (go back to the root amino acid). Note that a mutation can be both convergent and revertant, or parallel and revertant. 
 - **details**: Ancestral amino acid(s) for the EEMs and how many EEMs are issued from it (them).
 - **loss**: Number of times this newly acquired amino acid is lost (It becomes the ancestral amino acid in an other EEM).
 - **loss_details**: Towards which amino acids can we observe a loss.
@@ -78,8 +78,8 @@ It consists of 79 sequences of the PEPC protein in sedges (plant species at C3/C
 - **variance**: Variance of the number of EEMs in the simulations.
 - **mean**: Mean of the number of EEMs in the simulations.
 - **pvalue_raw**: p-value corresponding to the number of simulations with more EEMs than observed (ref-emerge) divided by the number of simulations.
-- **adjust_pvalue**:
-- **adjust_pvalue_fdr**:
+- **adjust_pvalue**: p-value adjusted with a Holm-Bonferroni correction.
+- **adjust_pvalue_fdr**: p-value adjusted with a FDR.
 - **detected_EEM**: If the mutation passed the acceptance threshold or not for the Emergence component.
 - **posmut**: joint position and amino acid tested for convergence at this position. 
 - **log-dep**: log likelihood of BayesTraits for the dependence model
