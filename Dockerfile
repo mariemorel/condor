@@ -8,6 +8,9 @@ COPY . /usr/local/bin/
 RUN apt-get update --fix-missing && \
     apt-get install -y wget && \
     apt-get install -y libglib2.0-0 cryptsetup-bin squashfs-tools runc ca-certificates-java openjdk-18-jre curl && \
+    useradd -ms /bin/bash condor
+
+USER condor
     cd /usr/local/ && \
     wget https://github.com/sylabs/singularity/releases/download/${SINGULARITY_VERSION}/${SINGULARITY_DEB} && \
     dpkg -i ${SINGULARITY_DEB} && \
