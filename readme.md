@@ -46,6 +46,19 @@ Finally, if you want to run only the Correlation component:
 
 For larger datasets (>1000), we recommand to increase --min_seq 10 and --bayes 20
 
+## Run with Docker
+To run ConDor using Docker, just type the following command:
+
+```
+docker run --privileged -w $PWD -v $PWD:$PWD evolbioinfo/condor \
+	--align <align fasta> \
+	--tree <tree newick> \
+	--outgroup <outgroup txt> \
+	--phenotype <phenotype txt> \
+	--resdir <result dir> \
+	<Other options>
+```
+
 # Outputs
 Two output files (tsv) are given by ConDor:
 
