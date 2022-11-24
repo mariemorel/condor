@@ -7,7 +7,7 @@ ENV SINGULARITY_DEB="singularity-ce_3.10.4-jammy_amd64.deb"
 COPY . /usr/local/bin/
 RUN apt-get update --fix-missing && \
     apt-get install -y wget && \
-    apt-get install -y libglib2.0-0 cryptsetup-bin squashfs-tools runc ca-certificates-java openjdk-18-jre curl && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y libglib2.0-0 cryptsetup-bin squashfs-tools runc ca-certificates-java openjdk-18-jre curl tzdata && \
     useradd -ms /bin/bash condor && \
     cd /usr/local/ && \
     wget https://github.com/sylabs/singularity/releases/download/${SINGULARITY_VERSION}/${SINGULARITY_DEB} && \
@@ -30,5 +30,6 @@ RUN mkdir /home/condor/tmp/ && nextflow -h && \
     singularity pull --name /usr/local/singularity/evolbioinfo-iqtree-v1.6.8.img docker://evolbioinfo/iqtree:v1.6.8 && \
     singularity pull --name /usr/local/singularity/evolbioinfo-pastml-v1.9.33.img docker://evolbioinfo/pastml:v1.9.33 && \
     singularity pull --name /usr/local/singularity/evolbioinfo-bayestraits-v3.0.1.img docker://evolbioinfo/bayestraits:v3.0.1
+
 
 ENTRYPOINT ["/usr/local/bin/run_condor"]
