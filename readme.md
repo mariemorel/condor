@@ -78,8 +78,8 @@ It consists of 79 sequences of the PEPC protein in sedges (plant species at C3/C
 - **variance**: Variance of the number of EEMs in the simulations.
 - **mean**: Mean of the number of EEMs in the simulations.
 - **pvalue_raw**: p-value corresponding to the number of simulations with more EEMs than observed (ref-emerge) divided by the number of simulations.
-- **adjust_pvalue**: p-value adjusted with a Holm-Bonferroni correction.
-- **adjust_pvalue_fdr**: p-value adjusted with a FDR.
+- **adjust_pvalue**: adjusted p-value according to Holm-Bonferroni correction.
+- **adjust_pvalue_fdr**: adjusted p-value according to Benjamini-Hochberg correction (False discovery rate).
 - **detected_EEM**: If the mutation passed the acceptance threshold or not for the Emergence component.
 - **posmut**: joint position and amino acid tested for convergence at this position. 
 - **log-dep**: log likelihood of BayesTraits for the dependence model
