@@ -4,3 +4,4 @@ work*
 *.log*
 *report*
 *html*
+.git*
