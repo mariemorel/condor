@@ -237,11 +237,14 @@ for acr, pos, mut in zip(all_tests.pastml_root,all_tests.position, all_tests.mut
     data = Substitutions_list_df[Substitutions_list_df["pos_mut"] == posmut]
     if len(data) ==1: #if only one aa leads to this mut. 
         if acr == mut :
-            Type.append("reversion")
+            Type.append("reversion, parallel")
         else:
             Type.append("parallel")
     else:
-        Type.append("convergent")
+        if acr == mut :
+            Type.append("reversion, convergent")
+        else:
+            Type.append("convergent")
     Reversion_nb.append(
         sum(Substitutions_list_df[Substitutions_list_df["pos_anc"] == posmut].nb))
     Rev_details.append("; ".join([":".join([str(i), str(j)]) for i, j in dict(
