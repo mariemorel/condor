@@ -34,7 +34,7 @@ To run ConDor you will need a multiple sequence alignment in fasta format includ
 # Usage
 To launch a full analysis (condor = both Emergence and Correlation components) with the test data (sedge dataset) run : 
 
-    nextflow run condor.nf --align test_data/cyp_coding.aa.coor_mays.fa --tree test_data/cyp_coding.phy_phyml_tree.txt --outgroup test_data/outgroup.txt --phenotype besnard2009_convergent_species.txt --resdir output --model best --nb_simu 100 --min_seq 2 --min_eem 2 --freqmode Fmodel --branches condor --correction holm --alpha 0.1 --bayes 2
+    nextflow run condor.nf --align test_data/cyp_coding.aa.coor_mays.fa --tree test_data/cyp_coding.phy_phyml_tree.txt --outgroup test_data/outgroup.txt --phenotype test_data/besnard2009_convergent_species.txt --resdir output --model best --nb_simu 100 --min_seq 2 --min_eem 2 --freqmode Fmodel --branches condor --correction holm --alpha 0.1 --bayes 2
 
 You can also chose to run only the Emergence component. In this case you would not need to provide the phenotype file nor BayesTraits parameters : 
 
@@ -42,7 +42,7 @@ You can also chose to run only the Emergence component. In this case you would n
 
 Finally, if you want to run only the Correlation component: 
 
-    nextflow run condor.nf --align test_data/cyp_coding.aa.coor_mays.fa --tree test_data/cyp_coding.phy_phyml_tree.txt --outgroup test_data/outgroup.txt --phenotype besnard2009_convergent_species.txt --resdir output --model best --min_seq 2 --min_eem 2 --freqmode Fmodel --branches correlation --bayes 2
+    nextflow run condor.nf --align test_data/cyp_coding.aa.coor_mays.fa --tree test_data/cyp_coding.phy_phyml_tree.txt --outgroup test_data/outgroup.txt --phenotype test_data/besnard2009_convergent_species.txt --resdir output --model best --min_seq 2 --min_eem 2 --freqmode Fmodel --branches correlation --bayes 2
 
 For larger datasets (>1000), we recommand to increase --min_seq 10 and --bayes 20
 
