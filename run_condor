@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+nextflow run $( dirname -- "$0"; )/condor.nf -profile docker ${1+"$@"}
