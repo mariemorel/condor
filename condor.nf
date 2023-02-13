@@ -1,44 +1,36 @@
 nextflow.enable.dsl=1
-path_file = "/pasteur/zeus/projets/p01/Evolbioinfo/users/mamorel/Projet_Convergence/Data/"
+path_file = "$baseDir/test_data/"
 
 /*
 //c3c4 sedges
-params.align = path_file + "args/raw/C3C4/cyp_coding.aa.coor_mays.fa"
-params.tree = path_file + "args/raw/C3C4/cyp_coding.phy_phyml_tree.txt"
-params.outgroup = path_file+"args/raw/C3C4/outgroup.txt"
-params.phenotype = path_file+"args/raw/C3C4/besnard2009_convergent_species.txt"
+params.align = path_file + "C3C4/cyp_coding.aa.coor_mays.fa"
+params.tree = path_file + "C3C4/cyp_coding.phy_phyml_tree.txt"
+params.outgroup = path_file+"C3C4/outgroup.txt"
+params.phenotype = path_file+"C3C4/besnard2009_convergent_species.txt"
 */
 
 /*
 //no c3c4 clade sedges adapted pheno
-params.align = path_file + "args/processed/c3c4/no_c3c4_clade/cyp_coding_noc3c4.aa.coor_mays.fa"
-params.tree = path_file + "args/processed/c3c4/no_c3c4_clade/cyp_coding_noc3c4.phy_phyml_tree.txt"
-params.outgroup = path_file+"args/processed/c3c4/no_c3c4_clade/outgroup.txt"
-params.phenotype = path_file+"args/processed/c3c4/no_c3c4_clade/besnard2009_c4pheno.txt" //phenotype could be optional ???
+params.align = path_file + "no_c3c4_clade/cyp_coding_noc3c4.aa.coor_mays.fa"
+params.tree = path_file + "no_c3c4_clade/cyp_coding_noc3c4.phy_phyml_tree.txt"
+params.outgroup = path_file+"no_c3c4_clade/outgroup.txt"
+params.phenotype = path_file+"no_c3c4_clade/besnard2009_c4pheno.txt" //phenotype could be optional ???
 */
 
 /*
-//HIV africa
-params.align = path_file + "args/processed/africa/recomb_jphmm/align.noCRF.jphmm_outgroup.aa.fa"
-params.tree = path_file + "args/processed/africa/recomb_jphmm/root.align.noCRF.jphmm_outgroup.fa.treefile"
-params.outgroup = path_file+"args/processed/africa/recomb_jphmm/outgroup.txt"
-params.phenotype = path_file+"args/processed/africa/recomb_jphmm/id_phenotype.txt"
-*/
-
-/*
-//synthetic africa
-params.align = path_file+ "args/processed/synthetic_africa/synthetic_out_simulated_RTafrica_5.fasta"
-params.tree = path_file+ "args/processed/africa/recomb_jphmm/root.align.noCRF.jphmm_outgroup.fa.treefile"
-params.outgroup = path_file+"args/processed/africa/recomb_jphmm/outgroup.txt"
-params.phenotype = path_file+"args/processed/africa/recomb_jphmm/id_phenotype.txt"
+//HIV
+params.align = path_file + "HIV/align.noCRF.jphmm_outgroup.aa.fa"
+params.tree = path_file + "HIV/root.align.noCRF.jphmm_outgroup.fa.treefile"
+params.outgroup = path_file+"HIV/outgroup.txt"
+params.phenotype = path_file+"HIV/id_phenotype.txt"
 */
 
 /*
 //rhodopsin 
-params.align = path_file + "args/processed/rhodopsin/lessgappy.align_reroot.fa" 
-params.tree = path_file + "args/processed/rhodopsin/tree_rerooted.nhx"
-params.outgroup = path_file+"args/processed/rhodopsin/outgroup_bis.txt"
-params.phenotype = path_file+"args/processed/rhodopsin/id_phenotype_marine.txt" //id_phenotype_marine.txt id_phenotype.txt
+params.align = path_file + "rhodopsin/lessgappy.align_reroot.fa" 
+params.tree = path_file + "rhodopsin/tree_rerooted.nhx"
+params.outgroup = path_file+"rhodopsin/outgroup_bis.txt"
+params.phenotype = path_file+"rhodopsin/id_phenotype_marine.txt" //id_phenotype_marine.txt id_phenotype.txt
 */
 
 //declaration of parameters
@@ -47,7 +39,7 @@ params.resdir=path_file+"results/c3c4_phenotype/JTT+R3/" //do not forget to chan
 params.model = "JTT+R3" // best: will choose the best model, other wise will take the given model
 params.matrices = "$baseDir/assets/protein_model.txt"
 params.nb_simu = 10000 //number of simulations to perform
-params.min_seq = 2 //at least (11 for rhodopsine, 2 for c3c4, 10 for synthetic and HIV)
+params.min_seq = 2 //at least (11 for rhodopsine, 2 for c3c4, 10 for synthetic and HIV) = 0.5% seq
 params.min_eem = 2 //strictly more than 2 EEMs
 params.freqmode = "Fmodel" //Fmodel, if something else: FO. Need to be changed to allow other frequencies
 
