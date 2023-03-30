@@ -21,7 +21,7 @@ import glob
 parser = argparse.ArgumentParser(
     description="count the number of substitutions")
 parser.add_argument("positions", help="positions to test")
-parser.add_argument("root", help="root sequence")
+parser.add_argument("root", help="root sequence as table")
 parser.add_argument("rates", help="file with the rates per position")
 parser.add_argument("align", help="file with the tips alignment in fasta")
 parser.add_argument(

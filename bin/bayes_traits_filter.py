@@ -13,13 +13,16 @@ parser.add_argument(
 parser.add_argument(
     "lim_bayes", help="lim value for log Bayes factor", type=float, default=10
 )
+parser.add_argument(
+    "positions", help="file with info on positions", type=str
+)
 
 args = parser.parse_args()
 
 bayes_file = args.bayes_file
 binary = args.binary_file
 lim_log = args.lim_bayes
-
+info = args.positions
 
 
 binary_df = pd.read_csv(binary, sep="\t")
@@ -31,6 +34,7 @@ bayes_df = pd.read_csv(
 )
 bayes_df.drop(["x1", "x2"], axis=1, inplace=True)
 
+info_df = pd.read_csv(info, sep="\t")
 
 cols = ["posmut", "log-dep", "log-indep", "BF"]
 
@@ -50,11 +54,14 @@ for pos_mut in binary_df.columns[1:-1]:
         corr.append("equivalent")
 
 bayes_df["correlation"] = corr
-bayes_df.to_csv("bayes_tested_results.tsv", sep="\t", index=None)
+
+all_df = info_df.merge(bayes_df, on="posmut")
+
+all_df.to_csv("bayes_tested_results.tsv", sep="\t", index=None)
 
 
 Bayes_detected = bayes_df[(bayes_df.BF > lim_log)
-    & (bayes_df.correlation == "positive")
+    & (all_df.correlation == "positive")
 ]
 
 Bayes_detected.to_csv("bayes_detected_results.tsv", sep="\t", index=None)

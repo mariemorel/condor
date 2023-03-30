@@ -371,9 +371,9 @@ process pre_count{
     val nb_simu
 
     output : 
-    tuple file(positions), file(rate), file(tree), file("*pastml_acr.fasta") into python_count
-    file "reconstructed_root.txt" into Root_seq
-    file "*marginal_posterior.txt" into Marginal_root
+    tuple file(positions), file(rate), file(tree), file("*pastml_acr.fasta"), file("reconstructed_root.txt") into python_count
+    file "reconstructed_root.txt" into Root_seq //positions with min_seq //first column positions associated //root num from 1
+    file "*marginal_posterior.txt" into Marginal_root //still positions associated root num from 0
 
     shell:
     //transform pastml outpout in a fasta file and retrieve root with marginal proba
@@ -384,20 +384,21 @@ process pre_count{
 
 process count_apparitions{
     label 'python'
-
     input :
     val min_eem 
-    tuple file(positions), file(rate), file(tree), file (align) from python_count
+    val min_seq
+    file align
+    tuple file(positions), file(rate), file(tree), file (align_acr), file(root) from python_count
     output : 
-    tuple file(rate), file(align), file ("*substitutions_even_root.tsv"), file("*substitutions_aa_tips_per_base.tsv") into Subscribe_matrices, Ref_couting
+    tuple file(rate), file(align_acr), file ("*substitutions_even_root.tsv"), file("*substitutions_aa_tips_per_base.tsv") into Subscribe_matrices, Ref_couting
     file "positions_to_test_eem.txt" into Positions_simu, Positions_eem //num from 1
-    file ("pos_mut_to_test_eem.txt") into Positions_correlation
+    file ("pos_mut_to_test_eem.txt") into Positions_correlation, Positions_eems_filter
     
     shell:
     //count EEMs from real data acr
     //min eem is strict >
     '''
-    count_substitutions_from_tips.py !{align} !{tree} !{positions} !{min_eem}
+    count_substitutions_from_tips.py !{align_acr} !{align} !{tree} !{positions} !{min_seq} !{min_eem} !{root} 
     '''
 }
 
@@ -413,8 +414,7 @@ process simulator {
 
     publishDir "${resdir}", pattern: "count*.tsv.gz", mode: 'copy'
     input : 
-    //each x from ListPositionsChannel.readLines() //each tested positions (num from 1)
-    each x from Positions_simu.flatMap{it.readLines()}
+    each x from Positions_simu.flatMap{it.readLines()} //each tested positions (num from 1) ListPositionsChannel.readLines()
     file simulation_model from SimulatorMatrix //substitution matrix 
     file (rates) from RatesChannel //reestimated rates
     file (freq) from FreqChannel //frequencies (model or optimised)
@@ -582,6 +582,7 @@ process Conclude_BayesTraits {
     input: 
     val bayes
     tuple file(binary), file(bayesfactor) from BayesChannel
+    file(positions) from Positions_eems_filter
     output: 
     tuple file("bayes_detected_results.tsv"), file("bayes_tested_results.tsv") into Subscribe_BayesTraits
     
@@ -590,7 +591,7 @@ process Conclude_BayesTraits {
     //when branches_corr == "true" && branches_eem == "false"  //"correlation"
     shell: 
     '''
-    bayes_traits_filter.py !{bayesfactor} !{binary} !{bayes}
+    bayes_traits_filter.py !{bayesfactor} !{binary} !{bayes} !{positions}
     '''
 
 }
@@ -602,12 +603,15 @@ Subscribe_BayesTraits.subscribe{detected, tested ->  tested.copyTo(file("${resdi
 process Correlation {
     label 'python'
     publishDir "${resdir}", mode: 'copy'
+    
     input: 
     val bayes
     tuple file (binary), file (bayesfactor) from CorrelationChannel
     tuple file (detected), file(tested) from MergeChannel
+    
     output:
     tuple file ("BayesFactor.txt"), file("tested_results.tsv"), file("significant_results.tsv")
+    
     shell:
     '''
     merge_results.py !{bayesfactor} !{binary} !{bayes} !{tested}
