@@ -30,7 +30,7 @@ args = parser.parse_args()
 t = PhyloTree(args.tree_file, format=1)
 t.link_to_alignment(args.align_acr_file, alg_format="fasta")
 
-align_Name = args.alignment_file.split(".")[0]
+align_Name = args.align_file.split(".")[0]
 alignment_acr = AlignIO.read(args.align_acr_file, "fasta")
 residues = AlignInfo.SummaryInfo(alignment_acr)._get_all_letters()
 
