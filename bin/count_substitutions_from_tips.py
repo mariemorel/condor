@@ -140,7 +140,7 @@ with open("positions_to_test_eem.txt", "w") as wf:
     wf.write("\n".join(list(map(str, pos_to_test))))
 
 df.to_csv(
-    "".join([align_Name, "substitutions_even_root.tsv"]), sep="\t", encoding="utf-8", index=False,
+    "".join([align_Name, "substitutions_even_root.tsv"]), sep="\t", encoding="utf-8"
 ) ##numerotation from 1
 
 per_base_tips = []
