@@ -123,7 +123,6 @@ subset_rate = [rate[pos-1] for pos in list_pos]
 substitutions_ref_df = pd.read_csv(ref_counting, sep="\t", index_col=0)
 substitutions_ref_eem_df = substitutions_ref_df[[str(i) for i in list_pos]]
 
-
 ref_df = np.array(substitutions_ref_eem_df.reindex(AA))
 
 Substitutions_list_df = pd.read_csv(args.substitutions, sep="\t")
@@ -185,11 +184,11 @@ def compute_pvalue(posnumber, position):
             aa_index = AA.index(aa)
             change = ref_df.T[posnumber][aa_index]
             if change > mineems: #strictly more than x EEMs
-                variance = np.var(dense[aa_index])
+                variance = np.round(np.var(dense[aa_index]),8)
                 mean = np.mean(dense[aa_index])
                 max_occur = max(load_csr[aa_index].data)
                 higher_simu = len([i for i in load_csr[aa_index].data if i >= change])
-                pval = higher_simu+0.5/(nb_simu+1)
+                pval = np.round((higher_simu+0.5)/(nb_simu+1), 8)
                 all_results.append(
                     [anc, cons_aa, position, aa, change, nb_seq,  max_occur, pval, variance, mean, rate_pos])
 
@@ -248,8 +247,8 @@ for acr, pos, mut in zip(all_tests.pastml_root,all_tests.position, all_tests.mut
         Substitutions_list_df[Substitutions_list_df["pos_anc"] == posmut][["mut", "nb"]].values).items()]))
     anc_dict = {anc:int(nb) for anc, nb in zip(data.anc, data.nb)}
     MaxKey = max(anc_dict, key=anc_dict.get)
-    findability.append(np.log10(1/Q_norm_df[MaxKey][mut]))
-    exchangeability.append(Q_norm_df[MaxKey][mut])
+    findability.append(np.round(np.log10(1/Q_norm_df[MaxKey][mut]), 8))
+    exchangeability.append(np.round(Q_norm_df[MaxKey][mut], 8))
     genetic_distance.append(distance_matrix_df[MaxKey][mut])
     max_anc.append(MaxKey)
     details.append("; ".join([":".join([str(i), str(j)]) for i, j in dict(data[["anc", "nb"]].values).items()]))
@@ -277,8 +276,8 @@ pvals_fdr = sm.stats.multitest.multipletests(all_tests.pvalue_raw, alpha=risk, m
 
 
 if test_type == "holm":
-    all_tests["adjust_pvalue"] = list(pvals_holm[1])
-    all_tests["adjust_pvalue_fdr"] = list(pvals_fdr[1])
+    all_tests["adjust_pvalue"] = [np.round(i,8) for i in list(pvals_holm[1])]
+    all_tests["adjust_pvalue_fdr"] = [np.round(i,8) for i in list(pvals_fdr[1])]
     all_tests["detected_EEM"] = ["PASS" if i else "NOT PASS" for i in pvals_holm[0]]
     cols = ["pastml_root",
             "consensus_root",
@@ -305,8 +304,8 @@ if test_type == "holm":
     all_tests = all_tests[cols]
 
 else:
-    all_tests["adjust_pvalue"] = list(pvals_fdr[1])
-    all_tests["adjust_pvalue_holm"] = list(pvals_holm[1])
+    all_tests["adjust_pvalue"] = [np.round(i,8) for i in list(pvals_fdr[1])]
+    all_tests["adjust_pvalue_holm"] = [np.round(i,8) for i in list(pvals_holm[1])]
     all_tests["detected_EEM"] = ["PASS" if i else "NOT PASS" for i in pvals_fdr[0]]
     cols = ["pastml_root",
         "consensus_root",
