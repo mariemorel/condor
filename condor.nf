@@ -385,10 +385,10 @@ process simulator {
     shell:
     //simulate and count EEMs from tips
     '''
-    sed -n "/^$((!{x}-1))\t/p" !{root} | cut -f 2 > root.txt #root num from 0
-    rate=`sed -n "!{x}p" !{rates}` # sed numerotation from 1
+    sed -n "/^$((!{pos}-1))\t/p" !{root} | cut -f 2 > root.txt #root num from 0
+    rate=`sed -n "!{pos}p" !{rates}` # sed numerotation from 1
     
-    output="!{x}_!{named_tree}_"
+    output="!{pos}_!{named_tree}_"
     simulator_counting_rates_from_root.py root.txt !{named_tree} ${output} ${rate} !{freq} !{simulation_model} 
     '''
 }
