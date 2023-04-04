@@ -45,7 +45,7 @@ params.min_eem = 2 //strictly more than 2 EEMs
 params.freqmode = "Fmodel" //Fmodel, if something else: FO. Need to be changed to allow other frequencies
 
 /////OPTIONAL PARAMETERS
-params.branches = "correlation" // condor, correlation, emergence. 
+params.branches = "condor" // condor, correlation, emergence. 
 //params.branches_eem = "true"
 //params.branches_corr = "true"
 params.correction = 'holm' // holm bonferroni correction , could be fdr_bh for benjamini hochberg
