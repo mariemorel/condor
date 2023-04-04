@@ -109,12 +109,12 @@ process find_model {
     label 'iqtree'
 
     input:
-    file tree
-    file align
+    path tree
+    path align
     val model
 
     output:
-    file "best_fit_model.txt"
+    path "best_fit_model.txt"
 
     shell:
     if ( model == 'best' )
@@ -134,12 +134,12 @@ process build_matrices {
     label 'python'
 
     input:
-    file iqtree_modelrate
-    file matrices
+    path iqtree_modelrate
+    path matrices
 
     output:
-    file "*pastml_matrix"
-    file "*simulator_matrix.model"
+    path "*pastml_matrix"
+    path "*simulator_matrix.model"
     
     shell:
     //matrices of substitution rate readable by simulator or pastml
@@ -154,7 +154,7 @@ process info_align {
     label 'goalign'
 
     input:
-    file align
+    path align
 
     output:
     stdout
@@ -171,7 +171,7 @@ process info_align_nbseq {
     label 'goalign'
 
     input:
-    file align
+    path align
     
     output:
     stdout
@@ -189,17 +189,17 @@ process reoptimize_tree {
 
     input:
     val freqmode
-    file align
-    file tree
-    file iqtree_mode
-    file matrices
+    path align
+    path tree
+    path iqtree_mode
+    path matrices
     tuple val(length), val(nb_seq)
 
     output:
-    file "align.treefile"
-    tuple val(length), file(align), file ("reestimated_rate"), file("frequencies.txt")
-    file "reestimated_rate"
-    file "frequencies.txt"
+    path "align.treefile"
+    tuple val(length), path(align), path("reestimated_rate"), path("frequencies.txt")
+    path "reestimated_rate"
+    path "frequencies.txt"
     
     shell:  
     //te : fixed tree no tree search performed
@@ -236,12 +236,12 @@ process tree_rename{
     publishDir "${resdir}", mode: 'copy'
 
     input:
-    file tree
-    file outgroup
+    path tree
+    path outgroup
 
     output:
-    file "named_tree"
-    file "rooted_*"
+    path "named_tree"
+    path "rooted_*"
 
     shell:
     //Remove branch length of root
@@ -258,12 +258,12 @@ process pars_align_file{
     label 'python'
  
     input : 
-    tuple val(length), file(align), file(rates), file(freq)
+    tuple val(length), path(align), path(rates), path(freq)
     val min_seq
 
     output:
-    tuple val(length), file(rates), file(freq), file('*pastml_input.tsv.gz')
-    file "positions_to_test.txt"
+    tuple val(length), path(rates), path(freq), path('*pastml_input.tsv.gz')
+    path "positions_to_test.txt"
   
     shell:
     //create a table of positions we test and for which we do acr
@@ -278,13 +278,13 @@ process acr_pastml{
     publishDir "${resdir}", pattern: "work_pastml/named*.nw",  mode: 'copy'
 
     input:
-    tuple val(length), file(rate), file(freq), file(input)
-    file tree
-    file positions
-    file matrix
+    tuple val(length), path(rate), path(freq), path(input)
+    path tree
+    path positions
+    path matrix
 
     output:
-    tuple val(length),file(positions), file(rate), file("work_pastml/named.*nwk"), file("*pastml.ML.out.gz"), file("marginal_root.txt")
+    tuple val(length),path(positions), path(rate), path("work_pastml/named.*nwk"), path("*pastml.ML.out.gz"), path("marginal_root.txt")
     
     //rate sed numerotation from 1 ($line -1)
     //input numerotation from 0
@@ -321,13 +321,13 @@ process pre_count{
 
     publishDir "${resdir}", mode: 'copy'
     input : 
-    tuple val(length), file(positions), file(rate), file(tree), file(pastml_acr), file(marginal_root)
+    tuple val(length), path(positions), path(rate), path(tree), path(pastml_acr), path(marginal_root)
     val nb_simu
 
     output : 
-    tuple file(positions), file(rate), file(tree), file("*pastml_acr.fasta"), file("reconstructed_root.txt")
-    file "reconstructed_root.txt" //positions with min_seq //first column positions associated //root num from 1
-    file "*marginal_posterior.txt" //still positions associated root num from 0
+    tuple path(positions), path(rate), path(tree), path("*pastml_acr.fasta"), path("reconstructed_root.txt")
+    path "reconstructed_root.txt" //positions with min_seq //first column positions associated //root num from 1
+    path "*marginal_posterior.txt" //still positions associated root num from 0
 
     shell:
     //transform pastml outpout in a fasta file and retrieve root with marginal proba
@@ -342,13 +342,13 @@ process count_apparitions{
     input :
     val min_eem 
     val min_seq
-    file align
-    tuple file(positions), file(rate), file(tree), file (align_acr), file(root)
+    path align
+    tuple path(positions), path(rate), path(tree), path (align_acr), path(root)
 
     output : 
-    tuple file(rate), file(align_acr), file ("*substitutions_even_root.tsv"), file("*substitutions_aa_tips_per_base.tsv")
-    file "positions_to_test_eem.txt" //num from 1
-    file ("pos_mut_to_test_eem.txt")
+    tuple path(rate), path(align_acr), path("*substitutions_even_root.tsv"), path("*substitutions_aa_tips_per_base.tsv")
+    path "positions_to_test_eem.txt" //num from 1
+    path "pos_mut_to_test_eem.txt"
     
     shell:
     //count EEMs from real data acr
@@ -370,14 +370,14 @@ process simulator {
 
     input : 
     each pos //each tested positions (num from 1) ListPositionsChannel.readLines()
-    file simulation_model //substitution matrix 
-    file rates //reestimated rates
-    file freq  //frequencies (model or optimised)
-    file named_tree //rooted tree with named internal nodes
-    file root //root corresponding to marginal proba
+    path simulation_model //substitution matrix 
+    path rates //reestimated rates
+    path freq  //frequencies (model or optimised)
+    path named_tree //rooted tree with named internal nodes
+    path root //root corresponding to marginal proba
 
     output : 
-    file("count*npz")
+    path "count*npz"
 
     //when: branches_eem == "true" //("emergence" || "condor")
     when : branches == "emergence" || branches == 'condor'
@@ -399,13 +399,13 @@ process conclude_convergence{
     publishDir "${resdir}", mode: 'copy'
     
     input: 
-    file simulation_model
-    file align 
-    file freq
-    tuple file(rate), file(acralign), file(ref_matrix), file(substitutions)//rates for all positions
-    file counts
-    file root //only the interesting positions starts from 1
-    file positions // starts from 1
+    path simulation_model
+    path align 
+    path freq
+    tuple path(rate), path(acralign), path(ref_matrix), path(substitutions)//rates for all positions
+    path counts
+    path root //only the interesting positions starts from 1
+    path positions // starts from 1
     val nb_simu
     val min_seq // >= 
     val min_eem // > strict
@@ -414,7 +414,7 @@ process conclude_convergence{
 
     //named*.phy
     output:
-    tuple file("detected_metrics.tsv"), file("all_results_metrics.tsv")
+    tuple path("detected_metrics.tsv"), path("all_results_metrics.tsv")
 
     shell:
     '''
@@ -430,13 +430,13 @@ process prepare_BT {
     label 'python'
 
     input:
-    file align
-    file positions
-    file phenotype 
+    path align
+    path positions
+    path phenotype 
     val branches
 
     output: 
-    file "*binary_tested_sites.tsv"
+    path "*binary_tested_sites.tsv"
 
     when : branches == "correlation" || branches == 'condor'
     //when: branches_corr == 'true' //("correlation" || "condor")
@@ -452,11 +452,11 @@ process prepare_tree {
     label 'gotree'
 
     input: 
-    file tree
+    path tree
     val branches
 
     output:
-    file "root_tree.nx"
+    path "root_tree.nx"
 
     when : branches == "correlation" || branches == 'condor'
     
@@ -479,10 +479,10 @@ process prepare_tree {
 process DataTraits {
 
     input: 
-    file binary
+    path binary
 
     output:
-    file ("data*")
+    path "data*"
 
     shell:
     ''' 
@@ -495,19 +495,19 @@ process BayesTraits {
     label 'bayestraits'
 
     input: 
-    file(data)
-    file nx_tree
+    path data
+    path nx_tree
 
     output:
-    file ("*Stones*")
+    path "*Stones*"
 
     shell:
     '''
-    y=`echo !{data}` 
-    x=${y//[!0-9]/} 
+    y=`echo !{data}`
+    x=${y//[!0-9]/}
     echo -e  "3\n2\nPriorAll uniform 0 100\nStones 100 1000\nLogFile Dependent_MCMC_10_${x}\nRun" > cmd_MCMC$x.txt;
-    BayesTraitsV3 !{nx_tree} !{data} < cmd_MCMC$x.txt; 
-    echo -e  "2\n2\nPriorAll uniform 0 100\nStones 100 1000\nLogFile Independent_MCMC_10_${x}\nRun" > cmd_Independent_MCMC$x.txt; 
+    BayesTraitsV3 !{nx_tree} !{data} < cmd_MCMC$x.txt;
+    echo -e  "2\n2\nPriorAll uniform 0 100\nStones 100 1000\nLogFile Independent_MCMC_10_${x}\nRun" > cmd_Independent_MCMC$x.txt;
     BayesTraitsV3 !{nx_tree} !{data} < cmd_Independent_MCMC$x.txt;
     '''
 }
@@ -516,12 +516,12 @@ process BayesTraits {
 process BayesFactor {
 
     input: 
-    file stones
-    file nx_tree
-    file binary
+    path stones
+    path nx_tree
+    path binary
 
     output:
-    tuple file(binary), file ("BayesFactor_raw.txt")
+    tuple path(binary), path("BayesFactor_raw.txt")
 
     shell:
     '''
@@ -544,12 +544,12 @@ process Conclude_BayesTraits {
     
     input: 
     val bayes
-    tuple file(binary), file(bayesfactor)
-    file positions
+    tuple path(binary), path(bayesfactor)
+    path positions
     val branches
 
     output: 
-    tuple file("bayes_detected_results.tsv"), file("bayes_tested_results.tsv")
+    tuple path("bayes_detected_results.tsv"), path("bayes_tested_results.tsv")
     
     when : branches == "correlation"     
     
@@ -569,11 +569,11 @@ process Correlation {
     
     input: 
     val bayes
-    tuple file (binary), file (bayesfactor)
-    tuple file (detected), file(tested)
+    tuple path(binary), path(bayesfactor)
+    tuple path(detected), path(tested)
     
     output:
-    tuple file ("BayesFactor.txt"), file("tested_results.tsv"), file("significant_results.tsv")
+    tuple path("BayesFactor.txt"), path("tested_results.tsv"), path("significant_results.tsv")
     
     shell:
     '''
@@ -644,7 +644,7 @@ workflow {
     length = info_align(align)
     nbseq = info_align_nbseq(align)
     //lenght and nb seqs in alignment (I think we can remove nb seqs)
-    statsalign = length.merge(nbseq)
+    statsalign = length.combine(nbseq)
     otree = reoptimize_tree(freqmode, align, tree, omodel, matrices, statsalign)
     treechannel = otree[0]
     ratesparamchannel = otree[1]
@@ -686,7 +686,7 @@ workflow {
     bayestraitstmp = DataTraits(binarytraits)
     bayestraits = bayestraitstmp.flatten()
 
-    stonestmp = BayesTraits(bayestraits, nexustree)
+    stonestmp = BayesTraits(bayestraits, nexustree.first())
     stones = stonestmp.flatten().collect()
 
     bayeschannel = BayesFactor(stones, nexustree,binarytraits)
