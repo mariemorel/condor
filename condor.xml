@@ -2,7 +2,7 @@
   <description>ConDor: A workflow to detect convergent evolution</description>
   <requirements>
     <requirement type="package" version="1.8.0">java</requirement>
-    <requirement type="package">singularity</requirement>
+    <requirement type="package">apptainer</requirement>
   </requirements>
   <stdio>
     <exit_code range="1:" level="fatal"/>
