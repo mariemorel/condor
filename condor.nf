@@ -41,7 +41,8 @@ params.model = "JTT+R3" // best: will choose the best model, other wise will tak
 params.matrices = "$baseDir/assets/protein_model.txt"
 params.nb_simu = 10000 //number of simulations to perform
 params.min_seq = 2 //at least (11 for rhodopsine, 2 for c3c4, 10 for synthetic and HIV) = 0.5% seq
-params.min_eem = 2 //strictly more than 2 EEMs
+params.min_eem = 3 // At least 3 EEMs
+params.positions= "none" // if the file exists, then only the given positions (0-based coordinates) are analysed by condor and min_seq is useless, but the branches and rates are optimised on the full alignment.
 params.freqmode = "Fmodel" //Fmodel, if something else: FO. Need to be changed to allow other frequencies
 
 /////OPTIONAL PARAMETERS
@@ -57,6 +58,9 @@ params.tree="null"
 params.outgroup="null"
 params.phenotype="null"
 
+params.optimize="true"
+params.rates="rates.txt"
+
 //creation of parameters
 align = file(params.align)
 tree = file(params.tree)
@@ -66,6 +70,7 @@ model = params.model
 nb_simu = params.nb_simu
 min_seq = params.min_seq
 min_eem = params.min_eem
+positions = file(params.positions)
 freqmode = params.freqmode
 
 //////////// Optional parameters
@@ -281,7 +286,8 @@ process tree_rename{
     //give a name to internal nodes
     ''' 
     sed  '/);/!s/)[0-9]*.[0-9]*;/);/' !{tree} > !{tree}_tmp
-    gotree reroot outgroup -r -i !{tree}_tmp -l !{outgroup} -o rooted_!{tree}
+    sed  's/[\\/\\|]/_/g' !{outgroup}  > outgroup_tmp
+    gotree reroot outgroup -r -i !{tree}_tmp -l outgroup_tmp -o rooted_!{tree}
     gotree rename --internal --tips=false --auto -i rooted_!{tree} -o named_tree
     '''
 }
@@ -291,6 +297,7 @@ process pars_align_file{
  
     input : 
     tuple val(length), path(align), path(rates), path(freq)
+    path positions
     val min_seq
 
     output:
@@ -300,7 +307,7 @@ process pars_align_file{
     shell:
     //create a table of positions we test and for which we do acr
     '''
-    pars_fasta_subset.py !{align} !{length} !{min_seq} refalign_
+    pars_fasta_subset.py !{align} !{length} !{min_seq} refalign_ !{positions}
     '''
 }
 
@@ -334,7 +341,7 @@ process acr_pastml{
     cat !{freq} >> parameter_$((${line}-1))
     echo -e "scaling_factor\t${R}" >> parameter_$((${line}-1)) ; done < !{positions}
       
-    gunzip -c !{input} > ${align%.*.*}.input
+    gunzip -c !{input} | sed 's/[\\/\\|]/_/g' > ${align%.*.*}.input
 
     VAR=`while read -r line; do echo parameter_$((${line}-1)); done < !{positions}`
     ID=`while read -r line; do echo $((${line}-1)); done < !{positions}`
@@ -384,9 +391,9 @@ process count_apparitions{
     
     shell:
     //count EEMs from real data acr
-    //min eem is strict >
+    //min eem is >= so we subtract 1 to be strict >
     '''
-    count_substitutions_from_tips.py !{align_acr} !{align} !{tree} !{positions} !{min_seq} !{min_eem} !{root} 
+    count_substitutions_from_tips.py !{align_acr} !{align} !{tree} !{positions} !{min_seq} !{min_eem-1} !{root} 
     '''
 }
 
@@ -440,7 +447,7 @@ process conclude_convergence{
     path positions // starts from 1
     val nb_simu
     val min_seq // >= 
-    val min_eem // > strict
+    val min_eem // >= so we subtract 1 to be > strict
     val alpha //0.1
     val correction //holm or fdr_bh
 
@@ -450,7 +457,7 @@ process conclude_convergence{
 
     shell:
     '''
-    convergent_substitutions_pvalue.py !{positions} !{root} !{rate} !{align} !{ref_matrix} !{substitutions} !{nb_simu} !{freq} !{simulation_model} !{min_seq} !{min_eem} !{alpha} !{correction}
+    convergent_substitutions_pvalue.py !{positions} !{root} !{rate} !{align} !{ref_matrix} !{substitutions} !{nb_simu} !{freq} !{simulation_model} !{min_seq} !{min_eem-1} !{alpha} !{correction}
     '''
 }
 
@@ -670,7 +677,9 @@ workflow {
     //lenght and nb seqs in alignment (I think we can remove nb seqs)
     statsalign = length.combine(nbseq)
 
-    if(params.optimize=="true"){
+    println(params.optimize)
+
+    if(params.optimize){
         otree = reoptimize_tree(freqmode, align, tree, omodel, matrices, statsalign)
     	treechannel = otree[0]
     	ratesparamchannel = otree[1]
@@ -688,7 +697,7 @@ workflow {
     namedtreechannel = otreerename[0]
     rootedtreechannel = otreerename[1]
     
-    opars = pars_align_file(ratesparamchannel, min_seq)
+    opars = pars_align_file(ratesparamchannel, positions, min_seq)
     pastmlalign = opars[0].transpose()
     positionschannel = opars[1]
 
