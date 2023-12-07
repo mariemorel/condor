@@ -58,7 +58,6 @@ params.tree="null"
 params.outgroup="null"
 params.phenotype="null"
 
-params.optimize="true"
 params.rates="rates.txt"
 
 //creation of parameters
@@ -238,34 +237,6 @@ process reoptimize_tree {
     for i in A R N D C Q E G H I L K M F P S T W Y V ; do grep "pi($i)" align.iqtree | awk -v var="$i" 'BEGIN{ORS="";print var"\\t"} {print $NF"\\n"}'; done > frequencies.txt  
     '''
 }
-
-//reoptimize tree branch lengths and estimate rates and frequencies by ML 
-process no_reoptimize_tree {
-    publishDir "${resdir}", mode: 'copy'
-    
-    input:
-    path align
-    path tree
-    path rates
-    path iqtree_mode
-    path matrices
-    tuple val(length), val(nb_seq)
-
-    output:
-    path tree
-    tuple val(length), path(align), path(rates), path("frequencies.txt")
-    path rates
-    path "frequencies.txt"
-    
-    script:
-    """
-    model=`awk 'BEGIN { FS="+" } {printf \$1}' ${iqtree_mode}`
-    freqs=`grep -i \$model -A 20 ${matrices} | tail -n 1 | sed 's/;//'`
-    AA="A R N D C Q E G H I L K M F P S T W Y V"
-    paste <(tr ' ' '\\n' <<< \${AA[*]}) <(tr ' ' '\\n' <<< \${freqs[*]}) >  frequencies.txt
-    """
-}
-
 
 process tree_rename{
     label 'gotree'
@@ -677,21 +648,11 @@ workflow {
     //lenght and nb seqs in alignment (I think we can remove nb seqs)
     statsalign = length.combine(nbseq)
 
-    println(params.optimize)
-
-    if(params.optimize){
-        otree = reoptimize_tree(freqmode, align, tree, omodel, matrices, statsalign)
-    	treechannel = otree[0]
-    	ratesparamchannel = otree[1]
-    	rateschannel = otree[2]
-    	freqchannel = otree[3]
-    }else{
-        otree = no_reoptimize_tree(align, tree, file(params.rates), omodel, matrices, statsalign)
-    	treechannel = otree[0]
-    	ratesparamchannel = otree[1]
-    	rateschannel = otree[2]
-    	freqchannel = otree[3]
-    }
+    otree = reoptimize_tree(freqmode, align, tree, omodel, matrices, statsalign)
+    treechannel = otree[0]
+    ratesparamchannel = otree[1]
+    rateschannel = otree[2]
+    freqchannel = otree[3]
 
     otreerename = tree_rename(treechannel, outgroup)
     namedtreechannel = otreerename[0]
