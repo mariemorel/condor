@@ -187,7 +187,7 @@ def compute_pvalue(posnumber, position):
                 variance = np.round(np.var(dense[aa_index]),8)
                 mean = np.mean(dense[aa_index])
                 max_occur = max(load_csr[aa_index].data)
-                higher_simu = len([i for i in load_csr[aa_index].data if i >= change])
+                higher_simu = len([i for i in dense[aa_index] if i >= change])
                 pval = np.round((higher_simu+0.5)/(nb_simu+1), 8)
                 all_results.append(
                     [anc, cons_aa, position, aa, change, nb_seq,  max_occur, pval, variance, mean, rate_pos])

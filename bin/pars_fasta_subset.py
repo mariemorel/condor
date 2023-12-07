@@ -5,12 +5,14 @@ from Bio import SeqIO
 import numpy as np
 from collections import Counter
 import argparse
+import os.path
 
 parser = argparse.ArgumentParser(description="Parse a fasta file into a table understandable by pastml and select sites to simulate")
 parser.add_argument("align", help="alignment in fasta")
 parser.add_argument("length", help = "nb sites" )
 parser.add_argument("min_seq", help = "nb sequences a mutation should be" )
 parser.add_argument("output", help="name of the output")
+parser.add_argument("positions", help="file with specific positions to test")
 args = parser.parse_args()
 
 
@@ -42,10 +44,16 @@ AA = ['A','R','N','D','C','Q', 'E', 'G' ,'H' ,'I' ,'L' ,'K' ,'M' ,'F', 'P', 'S',
 
 #test positions with mutations present in at least minseq and it is not a constant position.
 positions_to_test = []
-for pos in range(len_seq):
-    if len([Counter(align_df[pos])[i] for i in AA if Counter(align_df[pos])[i] >= minseq]) >= 2:
-        positions_to_test.append(pos) #numerotation starts at 0
+if os.path.isfile(args.positions):
+    with open(args.positions) as f:
+        for line in f:
+            positions_to_test.append(int(line.strip())) #numerotation at 0
+else:
+    for pos in range(len_seq):
+        if len([Counter(align_df[pos])[i] for i in AA if Counter(align_df[pos])[i] >= minseq]) >= 2:
+            positions_to_test.append(pos) #numerotation starts at 0
 
+    
 #create subset of alignment
 subset_align = align_df[positions_to_test]
 
